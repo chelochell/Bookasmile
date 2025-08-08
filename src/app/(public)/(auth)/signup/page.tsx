@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/utils/toast";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,13 +23,13 @@ export default function SignupPage() {
     try {
       await authClient.signUp.email({ email, password, name }, {
         onError: (ctx) => {
-          toast.error(ctx.error.message);
+          toastError(ctx.error.message);
         },
         onSuccess: () => {
-          toast.success("Signup successful");
+          toastSuccess("Signup successful");
+          router.push("/dashboard");
         }
       });
-      router.push("/");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);

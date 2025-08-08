@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
+import { toastError, toastSuccess } from "@/utils/toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,13 +22,13 @@ export default function LoginPage() {
     try {
       await authClient.signIn.email({ email, password }, {
         onError: (ctx) => {
-          toast.error(ctx.error.message);
+          toastError(ctx.error.message);
         },
         onSuccess: () => {
-          toast.success("Login successful");
+          toastSuccess("Login successful");
+          router.push("/dashboard");
         }
       });
-      router.push("/");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);

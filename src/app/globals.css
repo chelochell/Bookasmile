@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   /* brand color */
   --primary: #4E71FF;
@@ -44,6 +42,15 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+  /* status colors */
+  --error: #e11d48;
+  --error-foreground: oklch(0.985 0 0);
+  --info: #0ea5e9;
+  --info-foreground: oklch(0.985 0 0);
+  --warning: #f59e0b;
+  --warning-foreground: oklch(0.985 0 0);
+  --success: #10b981;
+  --success-foreground: oklch(0.985 0 0);
 }
 
 @theme inline {
@@ -138,5 +145,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Lato', sans-serif;
   }
 }

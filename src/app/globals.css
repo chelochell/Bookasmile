@@ -5,7 +5,13 @@
 
 :root {
   /* brand color */
-  --primary: oklch(0.21 0.006 285.885);
+  --primary: #4E71FF;
+  --primary-50: #ecf4ff;
+  --primary-100: #ddebff;
+  --primary-200: #c2daff;
+  --primary-300: #9cbfff;
+  --primary-400: #759aff;
+  --primary-500: #4e71ff;
   --primary-foreground: oklch(0.985 0 0);
   color-scheme: light;
   --radius: 0.625rem;

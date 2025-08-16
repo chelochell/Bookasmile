@@ -1,11 +1,13 @@
 import SignOutButton from "@/components/atoms/SignOutButton";
+import UpcomingAppointmentsCard from "@/components/organisms/upcoming-appointments-card";
 
 export default function DashboardPage() {
 
     return (
-        <div>
-            <h1>Dashboard</h1>
-            <SignOutButton />
+        <div className="p-4 border-t-2 w-full h-screen">
+            <p className="font-bold text-lg text-black">Welcome back, Fofie!</p>
+            <p className="text-sm text-slate-700 ">Here's an overview kana sa</p>
+            <UpcomingAppointmentsCard/>
         </div>
     );
 }

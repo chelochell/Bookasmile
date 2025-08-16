@@ -1,11 +1,4 @@
-import type { ReactNode } from "react";
 
-export default function PrivateLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  return (
-    <>{children}</>
-  );
-}
+import MainLayout from "@/components/layouts/main-layout";
+
+export default MainLayout

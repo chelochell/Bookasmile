@@ -6,6 +6,7 @@ import { swaggerUI } from '@hono/swagger-ui'
 import { openApiSpec } from '@/docs/openapi'
 import { AuthType } from '@/auth'
 import authRoutes from '@/server/routes/authRoutes'
+import testRoutes from '@/server/routes/testRoutes'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -20,6 +21,7 @@ app.use('*', logger())
 app.use('*', cors())
 
 app.route('/', authRoutes)
+app.route('/test', testRoutes)
 
 // Example routes
 app.get('/health', (c) => c.json({ status: 'ok' }))

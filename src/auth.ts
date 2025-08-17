@@ -19,7 +19,7 @@ export const auth = betterAuth({
   plugins: [
     admin({
       ac,
-      defaultRole: "user",
+      defaultRole: "patient",
       roles: {
         user: user,
         patient: patient,

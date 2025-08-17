@@ -6,6 +6,7 @@ export const authClient = createAuthClient({
     plugins: [
         adminClient({
             ac,
+            defaultRole: "patient",
             roles: {
                 user: user,
                 patient: patient,

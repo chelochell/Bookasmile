@@ -1,14 +1,9 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
-import { authClient } from "@/lib/auth-client"
-import { auth } from "@/auth"
-import { headers } from "next/headers"
+import { getServerSession } from "@/actions/get-server-session"
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  })
-  console.log(session)
+  const session = await getServerSession()
   return (
     <SidebarProvider>
       {session && session.user && (

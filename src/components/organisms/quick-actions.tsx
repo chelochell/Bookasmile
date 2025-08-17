@@ -1,8 +1,14 @@
+'use client'
 import React from 'react'
 import { Button } from '../ui/button'
 import { Plus, Calendar, ScanHeart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function QuickActions() {
+  const router = useRouter()
+  const handleBookAppointment = () => {
+    router.push('/appointment/new')
+  }
   return (
     <div className='flex flex-col gap-6'>
       <div>
@@ -10,7 +16,7 @@ export default function QuickActions() {
       </div>
 
       <div className='flex flex-col gap-6'>
-        <Button ><span><Plus/></span>Book Appointment</Button>
+        <Button onClick={handleBookAppointment}><span><Plus/></span>Book Appointment</Button>
         <div className='flex gap-2'>
           <Calendar size={16} color='#4f617b'/> 
           <p className='text-xs text-[#4f617b]'>View History</p>

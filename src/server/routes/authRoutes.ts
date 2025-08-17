@@ -9,6 +9,4 @@ router.on(['POST', 'GET'], '/auth/*', (c) => {
   return auth.handler(c.req.raw)
 })
 
-router.get
-
 export default router

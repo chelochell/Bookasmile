@@ -7,6 +7,7 @@ import { openApiSpec } from '@/docs/openapi'
 import { AuthType } from '@/auth'
 import authRoutes from '@/server/routes/authRoutes'
 import testRoutes from '@/server/routes/testRoutes'
+import adminRoutes from '@/server/routes/adminRoutes'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -22,6 +23,7 @@ app.use('*', cors())
 
 app.route('/', authRoutes)
 app.route('/test', testRoutes)
+app.route('/admin', adminRoutes)
 
 // Example routes
 app.get('/health', (c) => c.json({ status: 'ok' }))

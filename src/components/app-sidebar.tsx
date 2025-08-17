@@ -11,7 +11,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { MdDashboard } from "react-icons/md";
 
 import {
@@ -28,8 +28,8 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-// Menu items.
-const items = [
+// Menu items for patient.
+const patientItems = [
   {
     title: "Dashboard",
     url: "#",
@@ -47,13 +47,34 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+//menu items for super_admin and admin.
+const adminItems = [
+  {
+    title: "Dashboard",
+    url: "#",
+    icon: MdDashboard,
+  },
+];
+
+export function AppSidebar({ role }: { role: string }) {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const router = useRouter();
   const signOut = async () => {
     await authClient.signOut();
     router.push("/login");
   };
+
+  const items = useCallback(() => {
+    switch (role) {
+      case 'patient':
+        return patientItems;
+      case 'admin':
+      case 'super_admin':
+        return adminItems;
+      default:
+        return patientItems;
+    }
+  }, [role])();
 
   return (
     <Sidebar

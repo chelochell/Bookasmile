@@ -33,7 +33,7 @@ export default function UpcomingAppointmentsCard() {
     
   return (
     <>
-      <div className="w-full rounded-md py-6 px-4 border-2">
+      <div className="w-full rounded-md py-6 px-4 border-2 mt-5">
         <div>
           <p className="font-semibold text-sm text-black mb-2">Upcoming Appointments</p>
         </div>
@@ -53,6 +53,8 @@ export default function UpcomingAppointmentsCard() {
                 <AppointmentDropdown options={dropdownOptions} />
             </div>
         </div>
+
+        
       </div>
     </>
   );

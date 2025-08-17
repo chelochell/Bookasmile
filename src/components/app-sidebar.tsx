@@ -67,7 +67,7 @@ export function AppSidebar() {
     >
       <SidebarContent>
         <SidebarGroup className="py-4 pl-4">
-          <SidebarGroupLabel className="text-xl font-bold text-black mb-4">
+          <SidebarGroupLabel className="text-xl font-bold text-black mb-4 font-poppins">
             BookaSmile
           </SidebarGroupLabel>
           <SidebarGroupContent>

@@ -53,6 +53,9 @@
   --warning-foreground: oklch(0.985 0 0);
   --success: #10b981;
   --success-foreground: oklch(0.985 0 0);
+
+
+
 }
 
 @theme inline {
@@ -60,8 +63,10 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-mulish);
   --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+  --font-mulish: var(--font-mulish);
   --color-royal-blue-50: #ecf4ff;
   --color-royal-blue-100: #ddebff;
   --color-royal-blue-200: #c2daff;
@@ -104,6 +109,19 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-fiord-50: #f6f7f9;
+--color-fiord-100: #eceef2;
+--color-fiord-200: #d4dae3;
+--color-fiord-300: #aebbcb;
+--color-fiord-400: #8395ad;
+--color-fiord-500: #637994;
+--color-fiord-600: #4f617b;
+--color-fiord-700: #404e64;
+--color-fiord-800: #384354;
+--color-fiord-900: #323a48;
+--color-fiord-950: #212630;
+--font-header: "Open Sans", sans-serif; 
+
 }
 /* Always light mode: remove dark scheme override */
 
@@ -139,7 +157,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+
 }
+
+
 
 @layer base {
   * {
@@ -147,6 +168,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Lato', sans-serif;
+    font-family: var(--font-mulish), sans-serif;
+    
+  }
+  
+  .font-poppins {
+    font-family: var(--font-poppins), sans-serif;
+  }
+  
+  .font-mulish {
+    font-family: var(--font-mulish), sans-serif;
   }
 }

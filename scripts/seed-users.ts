@@ -31,39 +31,61 @@ interface CreatedUser {
   role: string
 }
 
-async function createUserWithRetries(userType: UserToCreate): Promise<CreatedUser | null> {
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const email = `${userType.role}+${attempt}@test.com`
-    const name = GENERIC_NAMES[userType.role]
+function generateRandomThreeLetters(): string {
+  const letters = 'abcdefghijklmnopqrstuvwxyz'
+  let result = ''
+  for (let i = 0; i < 3; i++) {
+    result += letters.charAt(Math.floor(Math.random() * letters.length))
+  }
+  return result
+}
+
+async function createUser(userType: UserToCreate, randomCode: string): Promise<CreatedUser | null> {
+  const email = `${userType.role}+${randomCode}@test.com`
+  const name = GENERIC_NAMES[userType.role]
+  
+  try {
+    console.log(`Creating ${userType.role} user: ${email}`)
     
-    try {
-      console.log(`Creating ${userType.role} user: ${email} (attempt ${attempt}/${MAX_RETRIES})`)
-      
-      const result = await AdminService.createUser({
+    const result = await AdminService.createUser({
+      email,
+      password: PASSWORD,
+      name,
+      role: userType.role,
+    })
+
+    if (result.success) {
+      console.log(`✅ Successfully created ${userType.role}: ${email}`)
+      return {
         email,
         password: PASSWORD,
         name,
         role: userType.role,
-      })
-
-      if (result.success) {
-        console.log(`✅ Successfully created ${userType.role}: ${email}`)
-        return {
-          email,
-          password: PASSWORD,
-          name,
-          role: userType.role,
-        }
-      } else {
-        console.log(`❌ Failed to create ${userType.role} (attempt ${attempt}): ${result.error}`)
       }
-    } catch (error: any) {
-      console.log(`❌ Error creating ${userType.role} (attempt ${attempt}): ${error.message}`)
+    } else {
+      console.log(`❌ Failed to create ${userType.role}: ${result.error}`)
+      return null
+    }
+  } catch (error: any) {
+    console.log(`❌ Error creating ${userType.role}: ${error.message}`)
+    return null
+  }
+}
+
+async function createAllUsersWithCode(randomCode: string): Promise<CreatedUser[]> {
+  console.log(`🎯 Using code: ${randomCode} for all users`)
+  console.log('─'.repeat(30))
+  
+  const createdUsers: CreatedUser[] = []
+  
+  for (const userType of USERS_TO_CREATE) {
+    const user = await createUser(userType, randomCode)
+    if (user) {
+      createdUsers.push(user)
     }
   }
   
-  console.log(`💥 Failed to create ${userType.role} after ${MAX_RETRIES} attempts`)
-  return null
+  return createdUsers
 }
 
 async function seedUsers() {
@@ -71,22 +93,32 @@ async function seedUsers() {
   console.log(`📝 Using password: ${PASSWORD}`)
   console.log('─'.repeat(50))
   
-  const createdUsers: CreatedUser[] = []
+  let createdUsers: CreatedUser[] = []
   
-  for (const userType of USERS_TO_CREATE) {
-    const user = await createUserWithRetries(userType)
-    if (user) {
-      createdUsers.push(user)
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const randomCode = generateRandomThreeLetters()
+    console.log(`\n🔄 Attempt ${attempt}/${MAX_RETRIES}`)
+    
+    createdUsers = await createAllUsersWithCode(randomCode)
+    
+    // If all users were created successfully, break out of retry loop
+    if (createdUsers.length === USERS_TO_CREATE.length) {
+      break
     }
-    console.log('') // Empty line for readability
+    
+    // If some failed, try again with a new code
+    if (createdUsers.length < USERS_TO_CREATE.length && attempt < MAX_RETRIES) {
+      console.log(`\n⚠️  Only ${createdUsers.length}/${USERS_TO_CREATE.length} users created. Trying with new code...\n`)
+      createdUsers = [] // Reset for next attempt
+    }
   }
   
-  console.log('─'.repeat(50))
+  console.log('\n' + '─'.repeat(50))
   console.log('📊 SEEDING SUMMARY')
   console.log('─'.repeat(50))
   
   if (createdUsers.length === 0) {
-    console.log('❌ No users were created')
+    console.log('❌ No users were created after all attempts')
     return
   }
   

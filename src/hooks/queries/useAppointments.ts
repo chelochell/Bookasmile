@@ -20,7 +20,7 @@ export const useAppointments = (params?: Partial<AppointmentQueryParams>) => {
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch appointments')
       }
-      return data.data
+      return data.data.appointments
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

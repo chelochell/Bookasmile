@@ -38,11 +38,20 @@ export default async function DashboardPage() {
                 </div>
             )}
 
-            {role === 'admin' || role === 'super_admin' && (
+            {(role === 'admin' || role === 'super_admin') && (
                 <div className='flex gap-8'>
                    <p className="text-2xl text-slate-700 ">Admin dashboard</p>
                 </div>
             )}
+
+            {role === 'secretary' && (
+                <div className='flex gap-8'>
+                   <p className="text-2xl text-slate-700 ">Secretary dashboard</p>
+                </div>
+            )}
+            
         </div>
+
+        
     );
 }

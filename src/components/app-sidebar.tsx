@@ -47,6 +47,28 @@ const patientItems = [
   },
 ];
 
+//Menu items for secretary. 
+const secretaryItems = [
+  {title: "Dashboard",
+    url: "/dashboard",
+    icon: MdDashboard,
+  }, 
+  {title: "Appointments",
+    url: "/appointment/secretary",
+    icon: ClipboardClock,
+  },  
+  {title: "Patients",
+    url: "/Patients",
+    icon: Bandage,
+  }, 
+  {title: "Chatbot",
+    url: "/Chatbot",
+    icon: Settings,
+  }
+
+
+]
+
 //menu items for super_admin and admin.
 const adminItems = [
   {
@@ -55,6 +77,8 @@ const adminItems = [
     icon: MdDashboard,
   },
 ];
+
+
 
 export function AppSidebar({ role }: { role: string }) {
   const router = useRouter();
@@ -72,6 +96,8 @@ export function AppSidebar({ role }: { role: string }) {
       case 'admin':
       case 'super_admin':
         return adminItems;
+      case 'secretary':
+        return secretaryItems;
       default:
         return patientItems;
     }

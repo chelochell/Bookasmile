@@ -4,6 +4,7 @@ import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import QueryProvider from "@/providers/QueryProvider";
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,10 +43,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${mulish.variable} antialiased`}
       >
+        <NuqsAdapter>
         <QueryProvider>
+
           {children}
           <ToastContainer theme="colored" />
         </QueryProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

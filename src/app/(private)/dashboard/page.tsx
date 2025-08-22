@@ -29,9 +29,11 @@ export default async function DashboardPage() {
             <p className="font-bold text-lg text-black">Welcome back, {session?.user?.name}</p>
             <p className="text-sm text-slate-700 ">Here's an overview of your appointments and quick actions.</p>
 
-            {role === 'patient' && upcomingAppointmentsProps.length > 0 && (
+            {role === 'patient' && (
                 <div className='flex gap-8'>
-                    <UpcomingAppointmentsCard appointments={upcomingAppointmentsProps} />
+                    {upcomingAppointmentsProps.length > 0 && (
+                        <UpcomingAppointmentsCard appointments={upcomingAppointmentsProps} />
+                    )}
                     <QuickActions />
                 </div>
             )}

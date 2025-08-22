@@ -4,11 +4,20 @@ import { useState } from 'react'
 import TreatmentType from '@/components/organisms/book/treatment-type'
 import AddNote from '@/components/organisms/book/add-note'
 import AppointmentSchedule from '@/components/organisms/book/appointment-schedule'
+import { Button } from '@/components/ui/button'
+import { utcToPhilippineTime } from '@/utils/time-converter'
+import { authClient } from '@/lib/auth-client'
+import { useCreateAppointment } from '@/hooks/mutations/useAppointmentMutations'
+import { AppointmentStatusEnum } from '@/server/models/appointment.model'
+import { useRouter } from 'next/navigation'
 
 const NewAppointmentPage = () => {
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([])
   const [appointmentNote, setAppointmentNote] = useState<string>('')
   const [selectedDateTime, setSelectedDateTime] = useState<string>('')
+  const { data: session } = authClient.useSession()
+  const createAppointment = useCreateAppointment()
+  const router = useRouter()
 
   const handleTreatmentSelection = (selectedIds: string[]) => {
     setSelectedTreatments(selectedIds)
@@ -16,17 +25,27 @@ const NewAppointmentPage = () => {
     // - Updating form state
     // - Calculating appointment duration
     // - Updating pricing
-    console.log('Selected treatments:', selectedIds)
   }
 
   const handleNoteChange = (note: string) => {
-    console.log('Note changed:', note)
     setAppointmentNote(note)
   }
 
   const handleDateTimeChange = (dateTime: string) => {
-    console.log('Date time changed:', dateTime)
     setSelectedDateTime(dateTime)
+  }
+
+  function handleSubmit() {
+    createAppointment.mutate({
+      patientId: session?.user?.id || '',
+      treatmentOptions: selectedTreatments,
+      appointmentDate: selectedDateTime,
+      notes: appointmentNote,
+      scheduledBy: session?.user?.id || '',
+      startTime: selectedDateTime,
+      status: AppointmentStatusEnum.PENDING,
+    })
+    router.push('/dashboard')
   }
 
   return (
@@ -58,6 +77,19 @@ const NewAppointmentPage = () => {
           />
         </div>
       </div>
+      
+      {/* Book Now Button */}
+      {selectedTreatments.length > 0 && selectedDateTime && (
+        <div className="mt-8 flex justify-center">
+          <Button 
+            className="bg-royal-blue-500 hover:bg-royal-blue-600 text-white px-12 py-3"
+            size="lg"
+            onClick={handleSubmit}
+          >
+            Book Now
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

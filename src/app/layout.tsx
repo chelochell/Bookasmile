@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Poppins, Mulish } from "next/font/google";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import QueryProvider from "@/providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,8 +42,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${mulish.variable} antialiased`}
       >
-        {children}
-        <ToastContainer theme="colored" />
+        <QueryProvider>
+          {children}
+          <ToastContainer theme="colored" />
+        </QueryProvider>
       </body>
     </html>
   );

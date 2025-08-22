@@ -30,6 +30,11 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+  // Appointment relations
+  patientAppointments   Appointment[] @relation("PatientAppointments")
+  dentistAppointments   Appointment[] @relation("DentistAppointments")
+  scheduledAppointments Appointment[] @relation("ScheduledAppointments")
+
   @@unique([email])
   @@map("user")
 }
@@ -79,4 +84,26 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Appointment {
+  appointmentId    String    @id @default(cuid()) @map("appointment_id")
+  patientId        String    @map("patient_id")
+  dentistId        String?   @map("dentist_id")
+  scheduledBy      String    @map("scheduled_by")
+  appointmentDate  DateTime  @map("appointment_date")
+  startTime        DateTime  @map("start_time")
+  endTime          DateTime? @map("end_time")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  notifContent     String?   @map("notif_content")
+  treatmentOptions String[]  @map("treatment_options")
+  status           String    @default("pending") @map("status")
+
+  // Foreign key relations (assuming these reference User model)
+  patient         User  @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  dentist         User? @relation("DentistAppointments", fields: [dentistId], references: [id], onDelete: Cascade)
+  scheduledByUser User  @relation("ScheduledAppointments", fields: [scheduledBy], references: [id], onDelete: Cascade)
+
+  @@map("appointment")
 }

@@ -11,7 +11,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { MdDashboard } from "react-icons/md";
 
 import {
@@ -26,23 +26,23 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 // Menu items for patient.
 const patientItems = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/dashboard",
     icon: MdDashboard,
   },
   {
     title: "Appointments",
-    url: "#",
+    url: "/appointment",
     icon: ClipboardClock,
   },
   {
     title: "Treatments",
-    url: "#",
+    url: "/treatments",
     icon: Bandage,
   },
 ];
@@ -51,14 +51,15 @@ const patientItems = [
 const adminItems = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/dashboard",
     icon: MdDashboard,
   },
 ];
 
 export function AppSidebar({ role }: { role: string }) {
-  const [activeItem, setActiveItem] = useState("Dashboard");
   const router = useRouter();
+  const pathname = usePathname();
+  
   const signOut = async () => {
     await authClient.signOut();
     router.push("/login");
@@ -75,6 +76,13 @@ export function AppSidebar({ role }: { role: string }) {
         return patientItems;
     }
   }, [role])();
+
+  const getActiveItem = (itemUrl: string) => {
+    if (pathname === itemUrl) return true;
+    if (pathname.startsWith(itemUrl) && itemUrl !== '/dashboard') return true;
+    if (pathname === '/dashboard' && itemUrl === '/dashboard') return true;
+    return false;
+  };
 
   return (
     <Sidebar
@@ -97,21 +105,18 @@ export function AppSidebar({ role }: { role: string }) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={activeItem === item.title}
+                    isActive={getActiveItem(item.url)}
                     className="data-[active=true]:bg-royal-blue-100 data-[active=true]:hover:bg-royal-blue-100"
                   >
-                    <a
-                      href={item.url}
-                      onClick={() => setActiveItem(item.title)}
-                    >
+                    <a href={item.url}>
                       <item.icon
                         className={
-                          activeItem === item.title ? "text-royal-blue-600" : ""
+                          getActiveItem(item.url) ? "text-royal-blue-600" : ""
                         }
                       />
                       <span
                         className={
-                          activeItem === item.title
+                          getActiveItem(item.url)
                             ? "text-royal-blue-600"
                             : "text-slate-600"
                         }

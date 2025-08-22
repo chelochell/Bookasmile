@@ -2,9 +2,15 @@
 
 import { useState } from 'react'
 import { format, isToday, isSameDay } from 'date-fns'
-import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+// Initialize dayjs plugins
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 export interface TimeSlot {
   time: string
@@ -20,14 +26,14 @@ export interface AppointmentScheduleProps {
 }
 
 const defaultTimeSlots: TimeSlot[] = [
-  { time: '9:00', available: true },
+  { time: '09:00', available: true },
   { time: '10:00', available: true },
   { time: '11:00', available: true },
   { time: '12:00', available: true },
-  { time: '1:00', available: true },
-  { time: '2:00', available: true },
-  { time: '3:00', available: true },
-  { time: '4:00', available: true },
+  { time: '13:00', available: true },
+  { time: '14:00', available: true },
+  { time: '15:00', available: true },
+  { time: '16:00', available: true },
 ]
 
 export default function AppointmentSchedule({
@@ -50,26 +56,12 @@ export default function AppointmentSchedule({
     
     setSelectedTime(time)
     
-    // Convert time to 24h format and create UTC datetime
-    const [timeStr, period] = time.includes('AM') || time.includes('PM') 
-      ? [time.replace(/\s?(AM|PM)/, ''), time.includes('PM') ? 'PM' : 'AM']
-      : [time, parseInt(time.split(':')[0]) >= 12 ? 'PM' : 'AM']
+    // Create datetime string in Philippine timezone
+    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+    const dateTimeStr = `${dateStr} ${time}`
     
-    let [hours, minutes = '00'] = timeStr.split(':')
-    hours = hours.trim()
-    
-    // Convert to 24h format
-    if (period === 'PM' && hours !== '12') {
-      hours = (parseInt(hours) + 12).toString()
-    } else if (period === 'AM' && hours === '12') {
-      hours = '0'
-    }
-    
-    const dateTime = new Date(selectedDate)
-    dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-    
-    // Convert to UTC string
-    const dateTimeUTC = dateTime.toISOString()
+    // Parse as Philippine time then convert to UTC
+    const dateTimeUTC = dayjs.tz(dateTimeStr, 'Asia/Manila').utc().toISOString()
     onDateTimeChange(dateTimeUTC)
   }
 
@@ -147,16 +139,10 @@ export default function AppointmentSchedule({
 
       {/* Selected DateTime Display */}
       {selectedDate && selectedTime && (
-        <div className="flex items-center justify-between p-4 bg-[#FFF8E7] border-2 border-[#FFBC4C] rounded-lg">
+        <div className="p-4 bg-[#FFF8E7] border-2 border-[#FFBC4C] rounded-lg">
           <span className="text-[#B8941F] font-medium">
             {formatSelectedDateTime()}
           </span>
-          <Button 
-            className="bg-royal-blue-500 hover:bg-royal-blue-600 text-white px-8"
-            size="lg"
-          >
-            Book Now
-          </Button>
         </div>
       )}
     </div>

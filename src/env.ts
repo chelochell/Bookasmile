@@ -7,6 +7,7 @@ export const env = createEnv({
     // DIRECT_URL: z.url(),
     BETTER_AUTH_SECRET: z.string(),
     BETTER_AUTH_URL: z.url(),
+    API_URL: z.url(), 
   },
   client: {
     NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().optional(),
@@ -16,6 +17,7 @@ export const env = createEnv({
     // DIRECT_URL: process.env.DIRECT_URL,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    API_URL: process.env.API_URL,
     NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
   }
 });

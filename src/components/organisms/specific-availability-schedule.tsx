@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Calendar } from '@/components/ui/calendar'
 import { Badge } from '@/components/ui/badge'
-import { useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
+import { ConfirmationDialog, useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
 import { CalendarDays, Plus, X, Edit } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns'
 import dayjs from 'dayjs'
@@ -52,7 +52,8 @@ export function SpecificAvailabilitySchedule({ dentistId }: SpecificAvailability
   })
 
   // Confirmation dialog hook
-  const { openDialog, ConfirmationDialog } = useConfirmationDialog()
+  const { isOpen: isConfirmDialogOpen, openDialog: openConfirmDialog, closeDialog: closeConfirmDialog } = useConfirmationDialog()
+  const [deleteAction, setDeleteAction] = useState<() => Promise<void>>(() => async () => {})
 
   // Calculate date range for current month view
   const startDate = startOfDay(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1))
@@ -141,17 +142,10 @@ export function SpecificAvailabilitySchedule({ dentistId }: SpecificAvailability
 
   // Handle delete
   const handleDelete = (availability: any) => {
-    const timeRange = `${formatPhilippineTime(availability.startDateTime)} - ${formatPhilippineTime(availability.endDateTime)}`
-    const date = toPhilippineTime(availability.startDateTime).format('dddd, MMMM D, YYYY')
-    
-    openDialog({
-      title: 'Delete Availability',
-      description: `Are you sure you want to delete the availability for ${date} from ${timeRange}? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      variant: 'destructive',
-      onConfirm: () => deleteAvailability.mutateAsync(availability.id)
+    setDeleteAction(() => async () => {
+      await deleteAvailability.mutateAsync(availability.id)
     })
+    openConfirmDialog()
   }
 
   // Group availabilities by date (using Philippine timezone for grouping)
@@ -369,7 +363,16 @@ export function SpecificAvailabilitySchedule({ dentistId }: SpecificAvailability
         </Dialog>
 
         {/* Confirmation Dialog */}
-        <ConfirmationDialog />
+        <ConfirmationDialog
+          isOpen={isConfirmDialogOpen}
+          onClose={closeConfirmDialog}
+          onConfirm={deleteAction}
+          title="Delete Availability"
+          description="Are you sure you want to delete this availability? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+        />
       </CardContent>
     </Card>
   )

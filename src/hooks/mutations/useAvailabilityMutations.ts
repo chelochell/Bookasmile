@@ -161,6 +161,8 @@ export function useDeleteSpecificDentistAvailability() {
         toast.success(data.message || 'Specific availability deleted successfully')
       } else {
         toast.error(data.error || 'Failed to delete specific availability')
+        // Throw error to trigger onError and make the promise reject
+        throw new Error(data.error || 'Failed to delete specific availability')
       }
     },
     onError: (error: Error) => {

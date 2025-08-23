@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { TimePicker } from '@/components/atoms/time-picker'
 import { Badge } from '@/components/ui/badge'
-import { useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
+import { ConfirmationDialog, useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
 import { Clock, Plus, X, Edit } from 'lucide-react'
 import { 
   useDentistAvailabilities, 
@@ -58,7 +58,8 @@ export function WeeklyAvailabilitySchedule({ dentistId }: WeeklyAvailabilitySche
   })
 
   // Confirmation dialog hook
-  const { openDialog, ConfirmationDialog } = useConfirmationDialog()
+  const { isOpen: isConfirmDialogOpen, openDialog: openConfirmDialog, closeDialog: closeConfirmDialog } = useConfirmationDialog()
+  const [deleteAction, setDeleteAction] = useState<() => Promise<void>>(() => async () => {})
 
   // Fetch data
   const { data: availabilities = [], isLoading } = useDentistAvailabilities({ dentistId })
@@ -141,20 +142,10 @@ export function WeeklyAvailabilitySchedule({ dentistId }: WeeklyAvailabilitySche
 
   // Handle delete
   const handleDelete = (availability: any) => {
-    const timeRange = `${availability.standardStartTime} - ${availability.standardEndTime}`
-    const dayName = daysOfWeek.find(d => d.value === availability.dayOfWeek)?.label || availability.dayOfWeek
-    const breakInfo = availability.breakStartTime && availability.breakEndTime 
-      ? ` (Break: ${availability.breakStartTime}-${availability.breakEndTime})` 
-      : ''
-    
-    openDialog({
-      title: 'Delete Weekly Availability',
-      description: `Are you sure you want to delete the ${dayName} availability from ${timeRange}${breakInfo}? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      variant: 'destructive',
-      onConfirm: () => deleteAvailability.mutateAsync(availability.id)
+    setDeleteAction(() => async () => {
+      await deleteAvailability.mutateAsync(availability.id)
     })
+    openConfirmDialog()
   }
 
   // Group availabilities by day
@@ -363,7 +354,16 @@ export function WeeklyAvailabilitySchedule({ dentistId }: WeeklyAvailabilitySche
         </Dialog>
 
         {/* Confirmation Dialog */}
-        <ConfirmationDialog />
+        <ConfirmationDialog
+          isOpen={isConfirmDialogOpen}
+          onClose={closeConfirmDialog}
+          onConfirm={deleteAction}
+          title="Delete Weekly Availability"
+          description="Are you sure you want to delete this weekly availability? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+        />
       </CardContent>
     </Card>
   )

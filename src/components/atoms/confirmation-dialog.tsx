@@ -10,18 +10,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Trash2 } from 'lucide-react'
 
 interface ConfirmationDialogProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: () => Promise<void> | void
   title?: string
   description?: string
   confirmText?: string
   cancelText?: string
   variant?: 'default' | 'destructive' | 'warning'
-  isLoading?: boolean
 }
 
 export function ConfirmationDialog({
@@ -32,9 +31,21 @@ export function ConfirmationDialog({
   description = 'Are you sure you want to proceed? This action cannot be undone.',
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  variant = 'default',
-  isLoading = false
+  variant = 'default'
 }: ConfirmationDialogProps) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true)
+      await onConfirm()
+      onClose()
+    } catch (error) {
+      // Error handling is done by the calling component
+    } finally {
+      setIsLoading(false)
+    }
+  }
   const getIcon = () => {
     switch (variant) {
       case 'destructive':
@@ -82,7 +93,7 @@ export function ConfirmationDialog({
           <Button
             type="button"
             variant={getConfirmButtonVariant()}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isLoading}
           >
             {isLoading ? 'Processing...' : confirmText}
@@ -93,73 +104,16 @@ export function ConfirmationDialog({
   )
 }
 
-// Hook for easier usage
+// Simple hook for dialog state management
 export function useConfirmationDialog() {
-  const [dialogState, setDialogState] = useState<{
-    isOpen: boolean
-    config: Partial<ConfirmationDialogProps>
-    isLoading: boolean
-  }>({
-    isOpen: false,
-    config: {},
-    isLoading: false
-  })
+  const [isOpen, setIsOpen] = useState(false)
 
-  const openDialog = (dialogConfig: Partial<ConfirmationDialogProps>) => {
-    setDialogState({
-      isOpen: true,
-      config: dialogConfig,
-      isLoading: false
-    })
-  }
-
-  const closeDialog = () => {
-    setDialogState(prev => ({
-      ...prev,
-      isOpen: false,
-      isLoading: false
-    }))
-    // Clear config after animation completes
-    setTimeout(() => {
-      setDialogState(prev => ({
-        ...prev,
-        config: {}
-      }))
-    }, 200)
-  }
-
-  const handleConfirm = async () => {
-    if (dialogState.config.onConfirm) {
-      setDialogState(prev => ({ ...prev, isLoading: true }))
-      
-      try {
-        await dialogState.config.onConfirm()
-      } catch (error) {
-        // Log error but don't handle it here - let the calling component handle it
-        console.error('Confirmation action error:', error)
-      } finally {
-        // Always close the dialog regardless of success/failure
-        closeDialog()
-      }
-    } else {
-      closeDialog()
-    }
-  }
-
-  const ConfirmationDialogComponent = () => (
-    <ConfirmationDialog
-      isOpen={dialogState.isOpen}
-      onClose={closeDialog}
-      onConfirm={handleConfirm}
-      isLoading={dialogState.isLoading}
-      {...dialogState.config}
-    />
-  )
+  const openDialog = () => setIsOpen(true)
+  const closeDialog = () => setIsOpen(false)
 
   return {
+    isOpen,
     openDialog,
-    closeDialog,
-    ConfirmationDialog: ConfirmationDialogComponent,
-    isLoading: dialogState.isLoading
+    closeDialog
   }
 }

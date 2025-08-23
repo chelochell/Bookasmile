@@ -9,6 +9,8 @@ import authRoutes from '@/server/routes/authRoutes'
 import testRoutes from '@/server/routes/testRoutes'
 import adminRoutes from '@/server/routes/adminRoutes'
 import appointmentRoutes from '@/server/routes/appointmentRoutes'
+import availabilityRoutes from '@/server/routes/availabilityRoutes'
+import dentistRoutes from '@/server/routes/dentistRoutes'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -26,6 +28,8 @@ app.route('/', authRoutes)
 app.route('/test', testRoutes)
 app.route('/admin', adminRoutes)
 app.route('/appointments', appointmentRoutes)
+app.route('/availability', availabilityRoutes)
+app.route('/dentists', dentistRoutes)
 
 // Example routes
 app.get('/health', (c) => c.json({ status: 'ok' }))

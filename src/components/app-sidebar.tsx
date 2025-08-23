@@ -10,6 +10,7 @@ import {
   Bandage,
   User,
   LogOut,
+  Building2,
 } from "lucide-react";
 import { useCallback } from "react";
 import { MdDashboard } from "react-icons/md";
@@ -65,9 +66,20 @@ const secretaryItems = [
     url: "/Chatbot",
     icon: Settings,
   }
-
-
 ]
+
+//Menu items for dentist.
+const dentistItems = [
+  {title: "Dashboard",
+    url: "/dashboard",
+    icon: MdDashboard,
+  },
+  {
+    title: "Appointments",
+    url: "/appointment",
+    icon: ClipboardClock,
+  },
+];
 
 //menu items for super_admin and admin.
 const adminItems = [
@@ -75,6 +87,11 @@ const adminItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: MdDashboard,
+  },
+  {
+    title: "Clinic Branches",
+    url: "/admin/clinic-branches",
+    icon: Building2,
   },
 ];
 
@@ -98,6 +115,8 @@ export function AppSidebar({ role }: { role: string }) {
         return adminItems;
       case 'secretary':
         return secretaryItems;
+      case 'dentist':
+        return dentistItems;
       default:
         return patientItems;
     }

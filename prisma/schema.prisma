@@ -35,6 +35,8 @@ model User {
   dentistAppointments   Appointment[] @relation("DentistAppointments")
   scheduledAppointments Appointment[] @relation("ScheduledAppointments")
 
+  dentist Dentist?
+
   @@unique([email])
   @@map("user")
 }
@@ -106,4 +108,68 @@ model Appointment {
   scheduledByUser User  @relation("ScheduledAppointments", fields: [scheduledBy], references: [id], onDelete: Cascade)
 
   @@map("appointment")
+}
+
+model Dentist {
+  id                   String                        @id @default(cuid())
+  userId               String                        @unique
+  user                 User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization       String[]
+  availability         DentistAvailability[]
+  specificAvailability SpecificDentistAvailability[]
+  leaves               DentistLeaves[]
+
+  @@map("dentist")
+}
+
+model ClinicBranch {
+  id                   Int                           @id @default(autoincrement())
+  name                 String                        @map("name")
+  address              String                        @map("address")
+  phone                String                        @map("phone")
+  email                String                        @map("email")
+  availability         DentistAvailability[]
+  specificAvailability SpecificDentistAvailability[]
+
+  @@map("clinic_branch")
+}
+
+model DentistAvailability {
+  id                String @id @default(cuid()) @map("id")
+  dentistId         String @map("dentist_id")
+  standardStartTime String @map("standard_start_time")
+  standardEndTime   String @map("standard_end_time")
+  breakStartTime    String? @map("break_start_time")
+  breakEndTime      String? @map("break_end_time")
+  dayOfWeek         String @map("day_of_week")
+  clinicBranchId    Int    @map("clinic_branch_id")
+
+  dentist      Dentist      @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  clinicBranch ClinicBranch @relation(fields: [clinicBranchId], references: [id], onDelete: Cascade)
+
+  @@map("dentist_availability")
+}
+
+model SpecificDentistAvailability {
+  id             String   @id @default(cuid())
+  dentistId      String   @map("dentist_id")
+  startDateTime  DateTime @map("start_date_time")
+  endDateTime    DateTime @map("end_date_time")
+  clinicBranchId Int?     @map("clinic_branch_id")
+
+  dentist      Dentist       @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  clinicBranch ClinicBranch? @relation(fields: [clinicBranchId], references: [id], onDelete: Cascade)
+
+  @@map("specific_dentist_availability")
+}
+
+model DentistLeaves {
+  id            String   @id @default(cuid())
+  dentistId     String   @map("dentist_id")
+  startDateTime DateTime @map("start_date_time")
+  endDateTime   DateTime @map("end_date_time")
+
+  dentist Dentist @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+
+  @@map("dentist_leaves")
 }

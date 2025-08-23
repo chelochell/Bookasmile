@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from "@/actions/get-server-session"
+import DentistAppointments from "@/components/pages/dentist/dentist-appointments"
 
 const AppointmentPage = async () => {
     const session = await getServerSession()
@@ -7,9 +8,15 @@ const AppointmentPage = async () => {
 
     if (role === 'secretary') {
         redirect('/appointment/secretary')
-    } else {
-        redirect('/appointment/new')
+    } else if (role === 'patient') {
+        redirect('/appointment/new') //TEMPORARY
     }
+
+    return (
+        <>
+            {role === 'dentist' && <DentistAppointments />}
+        </>
+    )
 }
 
 export default AppointmentPage

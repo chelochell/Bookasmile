@@ -26,9 +26,11 @@ export const appointmentApi = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const errorData = await response.json();
+      console.error('API Error Response:', errorData);
+      console.error('Response Status:', response.status);
       throw new Error(
-        error.message || `HTTP error! status: ${response.status}`
+        errorData.error || errorData.message || `HTTP error! status: ${response.status}`
       );
     }
 

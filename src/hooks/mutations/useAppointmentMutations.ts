@@ -14,15 +14,14 @@ export const useCreateAppointment = () => {
       // Invalidate and refetch all appointment lists
       queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() })
       
-      if (data.success) {
-        toast.success(data.message || 'Appointment created successfully')
-      } else {
-        toast.error(data.error || 'Failed to create appointment')
+      // Don't show automatic success toasts - let the component handle it
+      if (!data.success) {
+        console.error('Appointment creation failed:', data.error)
       }
     },
     onError: (error: Error) => {
-      console.log(error)
-      toast.error(error.message || 'Failed to create appointment')
+      console.error('Appointment mutation error:', error)
+      // Don't show automatic error toasts - let the component handle it
     },
   })
 }

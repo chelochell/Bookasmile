@@ -12,7 +12,14 @@ interface Appointment {
   startTime: string;
   treatmentOptions: string[];
   status: string;
-  dentistName?: string | null;
+  dentist?: {
+    id: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    }
+  } | null;
   notes?: string | null;
 }
 
@@ -115,7 +122,7 @@ export default function UpcomingAppointmentsCard({ appointments }: AppointmentCa
                 <AppointmentIcon/> 
                 <div>
                   <p className="text-sm text-black font-bold">{getAppointmentType(appointment.treatmentOptions)}</p>
-                  <p className="text-xs text-slate-700">{appointment.dentistName || 'Dentist TBD'}</p>
+                  <p className="text-xs text-slate-700">{appointment.dentist?.user?.name || 'Dentist TBD'}</p>
                   <p className="text-xs text-slate-700">{formatDateTime(appointment.appointmentDate, appointment.startTime)}</p>
                 </div>
               </div>

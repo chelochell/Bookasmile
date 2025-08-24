@@ -9,6 +9,8 @@ You are an expert in TypeScript, Hono.js, Next.js App Router, React, Shadcn UI, 
   - Prefer iteration and modularization over code duplication.
   - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
   - Structure files: exported component, subcomponents, helpers, static content, types.
+  - Use nuqs for search params.
+  - Use better-auth authClient for session on frontend and the better-auth auth for backend.
 
 Folder Structure Rules
 

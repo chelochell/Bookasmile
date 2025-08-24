@@ -25,7 +25,7 @@ export default async function DashboardPage() {
 
     
     return (
-        <div className="p-4 border-t-2 w-full h-screen">
+        <div className="p-4 w-full h-screen">
             <p className="font-bold text-lg text-black">Welcome back, {session?.user?.name}</p>
             <p className="text-sm text-slate-700 ">Here's an overview of your appointments and quick actions.</p>
 

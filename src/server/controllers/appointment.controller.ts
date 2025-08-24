@@ -14,6 +14,8 @@ const appointmentController = new Hono<{ Variables: AuthType }>({
 appointmentController.post('/', async (c) => {
   try {
     const body = await c.req.json()
+    console.log('🎯 Received appointment request body:', body)
+    
     const input: CreateAppointmentInput = {
       patientId: body.patientId,
       dentistId: body.dentistId,
@@ -24,9 +26,12 @@ appointmentController.post('/', async (c) => {
       notes: body.notes,
       notifContent: body.notifContent,
       treatmentOptions: body.treatmentOptions,
-      status: body.status,
+      status: body.status,  
+      clinicBranchId: body.clinicBranchId,
+      detailedNotes: body.detailedNotes,
     }
 
+    console.log('📝 Processed input for service:', input)
     const result = await AppointmentService.createAppointment(input)
     
     if (!result.success) {
@@ -49,6 +54,8 @@ appointmentController.post('/', async (c) => {
       201
     )
   } catch (error: any) {
+    console.error('❌ Controller error:', error)
+    console.error('Error details:', error.message, error.stack)
     return c.json(
       { 
         success: false, 
@@ -185,6 +192,8 @@ appointmentController.put('/:id', async (c) => {
       notifContent: body.notifContent,
       treatmentOptions: body.treatmentOptions,
       status: body.status,
+      clinicBranchId: body.clinicBranchId,
+      detailedNotes: body.detailedNotes,
     }
 
     const result = await AppointmentService.updateAppointment(input)

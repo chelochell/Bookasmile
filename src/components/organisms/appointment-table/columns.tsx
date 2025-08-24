@@ -31,8 +31,11 @@ export interface Appointment {
   }
   dentist: {
     id: string
-    name: string
-    email: string
+    user: {
+      id: string
+      name: string
+      email: string
+    }
   } | null
   scheduledByUser: {
     id: string
@@ -105,7 +108,7 @@ export const columns: ColumnDef<Appointment>[] = [
     header: "Dentist",
     cell: ({ row }) => {
       const appointment = row.original
-      const dentistName = appointment.dentist?.name
+      const dentistName = appointment.dentist?.user?.name
       return dentistName || <span className="text-muted-foreground">None</span>
     },
   },

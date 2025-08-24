@@ -122,6 +122,18 @@ export class DentistService {
             startDateTime: 'asc'
           }
         }
+        includeOptions.appointments = {
+          select: {
+            appointmentId: true,
+            appointmentDate: true,
+            startTime: true,
+            endTime: true,
+            status: true
+          },
+          orderBy: {
+            appointmentDate: 'desc'
+          }
+        }
       }
 
       const dentist = await prisma.dentist.findUnique({
@@ -189,6 +201,18 @@ export class DentistService {
         includeOptions.leaves = {
           orderBy: {
             startDateTime: 'asc'
+          }
+        }
+        includeOptions.appointments = {
+          select: {
+            appointmentId: true,
+            appointmentDate: true,
+            startTime: true,
+            endTime: true,
+            status: true
+          },
+          orderBy: {
+            appointmentDate: 'desc'
           }
         }
       }

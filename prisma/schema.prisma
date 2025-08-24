@@ -32,7 +32,6 @@ model User {
 
   // Appointment relations
   patientAppointments   Appointment[] @relation("PatientAppointments")
-  dentistAppointments   Appointment[] @relation("DentistAppointments")
   scheduledAppointments Appointment[] @relation("ScheduledAppointments")
 
   dentist Dentist?
@@ -101,11 +100,14 @@ model Appointment {
   notifContent     String?   @map("notif_content")
   treatmentOptions String[]  @map("treatment_options")
   status           String    @default("pending") @map("status")
+  clinicBranchId   Int       @default(1) @map("clinic_branch_id")
+  detailedNotes    String?   @map("detailed_notes")
 
-  // Foreign key relations (assuming these reference User model)
-  patient         User  @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
-  dentist         User? @relation("DentistAppointments", fields: [dentistId], references: [id], onDelete: Cascade)
-  scheduledByUser User  @relation("ScheduledAppointments", fields: [scheduledBy], references: [id], onDelete: Cascade)
+  // Foreign key relations
+  patient         User          @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  dentist         Dentist?      @relation("DentistAppointments", fields: [dentistId], references: [id], onDelete: Cascade)
+  scheduledByUser User          @relation("ScheduledAppointments", fields: [scheduledBy], references: [id], onDelete: Cascade)
+  clinicBranch    ClinicBranch  @relation(fields: [clinicBranchId], references: [id], onDelete: Cascade)
 
   @@map("appointment")
 }
@@ -118,6 +120,7 @@ model Dentist {
   availability         DentistAvailability[]
   specificAvailability SpecificDentistAvailability[]
   leaves               DentistLeaves[]
+  appointments         Appointment[]                 @relation("DentistAppointments")
 
   @@map("dentist")
 }
@@ -130,19 +133,20 @@ model ClinicBranch {
   email                String                        @map("email")
   availability         DentistAvailability[]
   specificAvailability SpecificDentistAvailability[]
+  appointments         Appointment[]
 
   @@map("clinic_branch")
 }
 
 model DentistAvailability {
-  id                String @id @default(cuid()) @map("id")
-  dentistId         String @map("dentist_id")
-  standardStartTime String @map("standard_start_time")
-  standardEndTime   String @map("standard_end_time")
+  id                String  @id @default(cuid()) @map("id")
+  dentistId         String  @map("dentist_id")
+  standardStartTime String  @map("standard_start_time")
+  standardEndTime   String  @map("standard_end_time")
   breakStartTime    String? @map("break_start_time")
   breakEndTime      String? @map("break_end_time")
-  dayOfWeek         String @map("day_of_week")
-  clinicBranchId    Int    @map("clinic_branch_id")
+  dayOfWeek         String  @map("day_of_week")
+  clinicBranchId    Int     @map("clinic_branch_id")
 
   dentist      Dentist      @relation(fields: [dentistId], references: [id], onDelete: Cascade)
   clinicBranch ClinicBranch @relation(fields: [clinicBranchId], references: [id], onDelete: Cascade)

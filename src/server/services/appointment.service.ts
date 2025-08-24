@@ -28,11 +28,35 @@ export class AppointmentService {
         notifContent: validatedInput.notifContent || null,
         treatmentOptions: validatedInput.treatmentOptions || [],
         status: validatedInput.status || 'pending',
+        clinicBranchId: validatedInput.clinicBranchId || 1,
+        detailedNotes: validatedInput.detailedNotes || null,
       }
 
       // Check for scheduling conflicts (only if dentist is assigned)
       let conflictingAppointment = null
       if (appointmentData.dentistId) {
+        console.log('🔍 Checking for conflicts with:')
+        console.log('  Dentist ID:', appointmentData.dentistId)
+        console.log('  Appointment Date:', appointmentData.appointmentDate)
+        console.log('  Start Time:', appointmentData.startTime)
+        console.log('  End Time:', appointmentData.endTime)
+        
+        // First, let's check if there are ANY appointments for this dentist
+        const allDentistAppointments = await prisma.appointment.findMany({
+          where: {
+            dentistId: appointmentData.dentistId
+          },
+          select: {
+            appointmentId: true,
+            appointmentDate: true,
+            startTime: true,
+            endTime: true,
+            status: true
+          }
+        })
+        
+        console.log('📋 All appointments for this dentist:', allDentistAppointments)
+        
         conflictingAppointment = await prisma.appointment.findFirst({
           where: {
             dentistId: appointmentData.dentistId,
@@ -63,9 +87,12 @@ export class AppointmentService {
             ]
           }
         })
+        
+        console.log('⚠️ Conflicting appointment found:', conflictingAppointment)
       }
 
       if (conflictingAppointment) {
+        console.log('❌ Conflict detected, returning error')
         return {
           success: false,
           error: 'Schedule conflict detected',
@@ -73,19 +100,47 @@ export class AppointmentService {
         }
       }
 
-      const appointment = await prisma.appointment.create({
-        data: appointmentData,
-        include: {
-          patient: { select: { id: true, name: true, email: true } },
-          dentist: { select: { id: true, name: true, email: true } },
-          scheduledByUser: { select: { id: true, name: true, email: true } }
-        }
-      })
+      console.log('✅ No conflicts found, creating appointment...')
+      console.log('📝 Final appointment data:', appointmentData)
 
-      return {
-        success: true,
-        data: appointment,
-        message: 'Appointment created successfully'
+      try {
+        const appointment = await prisma.appointment.create({
+          data: appointmentData,
+          include: {
+            patient: { select: { id: true, name: true, email: true } },
+            dentist: { 
+              select: { 
+                id: true, 
+                user: { select: { id: true, name: true, email: true } } 
+              } 
+            },
+            scheduledByUser: { select: { id: true, name: true, email: true } }
+          }
+        })
+
+        console.log('🎉 Appointment created successfully:', appointment.appointmentId)
+        
+        return {
+          success: true,
+          data: appointment,
+          message: 'Appointment created successfully'
+        }
+      } catch (dbError: any) {
+        console.error('💥 Database error:', dbError)
+        console.error('💥 Error code:', dbError.code)
+        console.error('💥 Error meta:', dbError.meta)
+        
+        // Check for specific database errors
+        if (dbError.code === 'P2003') {
+          console.error('💥 Foreign key constraint failed:', dbError.meta?.field_name)
+          return {
+            success: false,
+            error: 'Invalid reference data',
+            message: 'Selected dentist, patient, or clinic branch does not exist'
+          }
+        }
+        
+        throw dbError // Re-throw if not handled
       }
     } catch (error: any) {
       return {
@@ -105,7 +160,12 @@ export class AppointmentService {
         where: { appointmentId },
         include: {
           patient: { select: { id: true, name: true, email: true } },
-          dentist: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
           scheduledByUser: { select: { id: true, name: true, email: true } }
         }
       })
@@ -168,7 +228,12 @@ export class AppointmentService {
           where,
           include: {
             patient: { select: { id: true, name: true, email: true } },
-            dentist: { select: { id: true, name: true, email: true } },
+            dentist: { 
+              select: { 
+                id: true, 
+                user: { select: { id: true, name: true, email: true } } 
+              } 
+            },
             scheduledByUser: { select: { id: true, name: true, email: true } }
           },
           orderBy: [
@@ -293,7 +358,12 @@ export class AppointmentService {
         data: updateData,
         include: {
           patient: { select: { id: true, name: true, email: true } },
-          dentist: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
           scheduledByUser: { select: { id: true, name: true, email: true } }
         }
       })

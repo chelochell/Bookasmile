@@ -19,6 +19,8 @@ export const appointmentSchema = z.object({
   notifContent: z.string().optional(),
   treatmentOptions: z.array(z.string()).optional().default([]),
   status: z.enum(['pending', 'confirmed', 'completed', 'cancelled', 'rescheduled']).optional().default('pending'),
+  clinicBranchId: z.number().optional(),
+  detailedNotes: z.string().optional(),
 })
 
 // Schema for creating a new appointment
@@ -42,6 +44,8 @@ export const appointmentQuerySchema = z.object({
     message: 'Invalid end date format'
   }).optional(),
   status: z.enum(['pending', 'confirmed', 'completed', 'cancelled', 'rescheduled']).optional(),
+  clinicBranchId: z.number().optional(),
+  detailedNotes: z.string().optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
   offset: z.string().regex(/^\d+$/).transform(Number).optional(),
 })

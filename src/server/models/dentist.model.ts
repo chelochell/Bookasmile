@@ -19,9 +19,9 @@ const specializationOptions = [
 // Base dentist schema for validation
 export const dentistSchema = z.object({
   id: z.cuid().optional(),
-  userId: z.string('Invalid user ID'),
+  userId: z.string({ message: 'Invalid user ID' }),
   specialization: z.array(z.enum(specializationOptions, {
-    errorMap: () => ({ message: 'Invalid specialization' })
+    message: 'Invalid specialization'
   })).min(1, 'At least one specialization is required'),
 })
 

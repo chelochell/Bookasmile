@@ -5,13 +5,18 @@
 
 :root {
   /* brand color */
-  --primary: #7b43ff;
-  --primary-50: #f4f1ff;
-  --primary-100: #eae6ff;
-  --primary-200: #d8cfff;
-  --primary-300: #baa9ff;
-  --primary-400: #9a79ff;
-  --primary-500: #7b43ff;
+  --primary-50: #ecf4ff;
+  --primary-100: #ddebff;
+  --primary-200: #c2daff;
+  --primary-300: #9cbfff;
+  --primary-400: #759aff;
+  --primary-500: #4e71ff;
+  --primary-600: #364df5;
+  --primary-700: #2a3cd8;
+  --primary-800: #2535ae;
+  --primary-900: #263489;
+  --primary-950: #161c50;
+  --primary: var(--primary-500);
   --primary-foreground: #D6E6F2;
   color-scheme: light;
   --radius: 0.625rem;

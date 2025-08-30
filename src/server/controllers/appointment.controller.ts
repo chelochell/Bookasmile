@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { AuthType } from '@/auth'
 import { AppointmentService } from '@/server/services/appointment.service'
 import { CreateAppointmentInput, UpdateAppointmentInput } from '@/server/models/appointment.model'
+import { getServerSession } from '@/actions/get-server-session'
 
 const appointmentController = new Hono<{ Variables: AuthType }>({
   strict: false,
@@ -230,6 +231,96 @@ appointmentController.put('/:id', async (c) => {
 })
 
 /**
+ * Confirm an appointment
+ * PATCH /appointments/:id/confirm
+ */
+appointmentController.patch('/:id/confirm', async (c) => {
+  try {
+    const appointmentId = c.req.param('id')
+    
+    if (!appointmentId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing appointment ID', 
+          message: 'Appointment ID is required' 
+        }, 
+        400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to confirm appointments' 
+        }, 
+        403
+      )
+    }
+
+    const result = await AppointmentService.confirmAppointment(appointmentId)
+    
+    if (!result.success) {
+      return c.json(
+        { 
+          success: false, 
+          error: result.error, 
+          message: result.message 
+        }, 
+        result.error === 'Appointment not found' ? 404 : 400
+      )
+    }
+
+    return c.json(
+      { 
+        success: true, 
+        data: result.data, 
+        message: result.message 
+      }, 
+      200
+    )
+  } catch (error: any) {
+    return c.json(
+      { 
+        success: false, 
+        error: 'Failed to confirm appointment', 
+        message: 'An error occurred while confirming the appointment' 
+      }, 
+      500
+    )
+  }
+})
+
+/**
  * Delete an appointment
  * DELETE /appointments/:id
  */
@@ -245,6 +336,44 @@ appointmentController.delete('/:id', async (c) => {
           message: 'Appointment ID is required' 
         }, 
         400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to delete appointments' 
+        }, 
+        403
       )
     }
 

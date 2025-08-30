@@ -55,6 +55,34 @@ export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>
 export type UpdateAppointmentInput = z.infer<typeof updateAppointmentSchema>
 export type AppointmentQueryParams = z.infer<typeof appointmentQuerySchema>
 export type AppointmentData = z.infer<typeof appointmentSchema> 
+
+// Extended type with related data for display purposes
+export type AppointmentWithRelations = AppointmentData & {
+  patient?: {
+    id: string
+    name: string
+    email: string
+  }
+  dentist?: {
+    id: string
+    user: {
+      id: string
+      name: string
+      email: string
+    }
+  } | null
+  scheduledByUser?: {
+    id: string
+    name: string
+    email: string
+  }
+  clinicBranch?: {
+    id: number
+    name: string
+    address: string
+  }
+}
+
 export enum AppointmentStatusEnum {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { usePatientAppointments } from '@/hooks/queries/useAppointments'
+import { usePatientAppointments } from '@/hooks/queries/use-appointments'
 import { Appointment } from '@/components/organisms/appointment-table/columns'
 import { authClient } from '@/lib/auth-client'
 

@@ -84,4 +84,4 @@ export const useCompletedAppointments = (enabled = true) => {
 // Hook to fetch cancelled appointments
 export const useCancelledAppointments = (enabled = true) => {
   return useAppointmentsByStatus('cancelled', enabled)
-} 
+}

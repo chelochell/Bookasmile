@@ -8,7 +8,7 @@ import { ChevronDown, Filter } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { Plus, BellDot, Calendar } from 'lucide-react'
 import { DataTable, columns } from '../organisms/appointment-table'
-import { useAppointments } from '@/hooks/queries/useAppointments'
+import { useAppointments } from '@/hooks/queries/use-appointments'
 import { useMemo } from 'react'
 
 const AppointmentManagementPage = () => {

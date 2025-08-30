@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { appointmentApi } from '@/lib/api/appointments'
-import { appointmentKeys } from '@/hooks/queries/useAppointments'
+import { appointmentKeys } from '@/hooks/queries/use-appointments'
 import { CreateAppointmentInput, UpdateAppointmentInput } from '@/server/models/appointment.model'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 
 // Create appointment mutation
 export const useCreateAppointment = () => {
@@ -94,4 +94,4 @@ export const useAppointmentMutations = () => {
     delete: deleteMutation,
     isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
   }
-} 
+}

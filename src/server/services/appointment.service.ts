@@ -166,7 +166,8 @@ export class AppointmentService {
               user: { select: { id: true, name: true, email: true } } 
             } 
           },
-          scheduledByUser: { select: { id: true, name: true, email: true } }
+          scheduledByUser: { select: { id: true, name: true, email: true } },
+          clinicBranch: { select: { id: true, name: true, address: true } }
         }
       })
 
@@ -234,7 +235,8 @@ export class AppointmentService {
                 user: { select: { id: true, name: true, email: true } } 
               } 
             },
-            scheduledByUser: { select: { id: true, name: true, email: true } }
+            scheduledByUser: { select: { id: true, name: true, email: true } },
+            clinicBranch: { select: { id: true, name: true, address: true } }
           },
           orderBy: [
             { appointmentDate: 'asc' },
@@ -378,6 +380,55 @@ export class AppointmentService {
         success: false,
         error: error.message || 'Failed to update appointment',
         message: 'Appointment update failed'
+      }
+    }
+  }
+
+  /**
+   * Confirm an appointment (change status to confirmed)
+   */
+  static async confirmAppointment(appointmentId: string) {
+    try {
+      // Check if appointment exists
+      const existingAppointment = await prisma.appointment.findUnique({
+        where: { appointmentId }
+      })
+
+      if (!existingAppointment) {
+        return {
+          success: false,
+          error: 'Appointment not found',
+          message: 'No appointment found with this ID'
+        }
+      }
+
+      // Update appointment status to confirmed
+      const appointment = await prisma.appointment.update({
+        where: { appointmentId },
+        data: { status: 'confirmed' },
+        include: {
+          patient: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
+          scheduledByUser: { select: { id: true, name: true, email: true } },
+          clinicBranch: { select: { id: true, name: true, address: true } }
+        }
+      })
+
+      return {
+        success: true,
+        data: appointment,
+        message: 'Appointment confirmed successfully'
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to confirm appointment',
+        message: 'Appointment confirmation failed'
       }
     }
   }

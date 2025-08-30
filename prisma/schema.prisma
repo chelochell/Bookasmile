@@ -38,6 +38,7 @@ model User {
   notifications Notification[]
 
   dentist Dentist?
+  basicUserInformation BasicUserInformation?
 
   @@unique([email])
   @@map("user")
@@ -202,6 +203,33 @@ model Notification {
   appointment Appointment? @relation(fields: [appointmentId], references: [appointmentId], onDelete: SetNull)
 
   @@map("notification")
+}
+
+model BasicUserInformation {
+  id String @id @default(cuid())
+  userId String @unique
+  firstName String
+  lastName String
+  middleInitial String?
+  birthDate DateTime
+  gender String
+  phoneNumber String
+  address String
+  region String
+  province String
+  city String
+  barangay String
+  zipCode String
+  country String @default("Philippines")
+  emergencyContactName String?
+  emergencyContactPhoneNumber String?
+  emergencyContactRelationship String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("basic_user_information")
 }
 
 

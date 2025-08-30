@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Activity,
   Bell,
+  Bot,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { MdDashboard } from "react-icons/md";
@@ -79,6 +80,11 @@ const patientItems: MenuItem[] = [
       { title: "Completed", url: "/treatments/completed" }
     ]
   },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
 ];
 
 //Menu items for secretary. 
@@ -91,7 +97,7 @@ const secretaryItems: MenuItem[] = [
     url: "/appointment/secretary",
     icon: ClipboardClock,
     subItems: [
-      { title: "Manage Appointments", url: "/appointment/secretary/manage" },
+      { title: "Manage Appointments", url: "/appointment/secretary" },
       { title: "Schedule", url: "/appointment/secretary/schedule" }
     ]
   },  
@@ -104,7 +110,12 @@ const secretaryItems: MenuItem[] = [
     ]
   }, 
   {title: "Chatbot",
-    url: "/Chatbot",
+    url: "/chatbot",
+    icon: Bot,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
     icon: Settings,
   }
 ]
@@ -124,6 +135,11 @@ const dentistItems: MenuItem[] = [
       { title: "Upcoming", url: "/appointment/upcoming" }
     ]
   },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
 ];
 
 //menu items for super_admin and admin.
@@ -141,6 +157,11 @@ const adminItems: MenuItem[] = [
       { title: "All Branches", url: "/admin/clinic-branches/all" },
       { title: "Add Branch", url: "/admin/clinic-branches/new" }
     ]
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
   },
 ];
 
@@ -283,6 +304,7 @@ export function AppSidebar({ role, user }: AppSidebarProps) {
               variant="ghost"
               size="sm"
               className="ml-auto text-gray-400 hover:text-gray-600"
+              onClick={() => router.push('/settings')}
             >
               <Settings className="h-4 w-4" />
             </Button>

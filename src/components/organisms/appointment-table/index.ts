@@ -1,2 +1,2 @@
 export { DataTable } from './data-table'
-export { columns, type Appointment } from './columns'
+export { columns, createColumnsWithActions, type Appointment, type AppointmentActionsProps } from './columns'

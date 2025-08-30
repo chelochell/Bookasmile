@@ -24,6 +24,14 @@ interface AssignDentistParams {
   dentistId: string
 }
 
+interface CancelAppointmentParams {
+  appointmentId: string
+}
+
+interface ResetStatusParams {
+  appointmentId: string
+}
+
 // Confirm appointment mutation
 export function useConfirmAppointment() {
   const queryClient = useQueryClient()
@@ -295,6 +303,136 @@ export function useAssignDentist() {
     },
     onSuccess: (data) => {
       toast.success(data.message || 'Dentist assigned successfully')
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure cache is in sync
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+    },
+  })
+}
+
+// Cancel appointment mutation
+export function useCancelAppointment() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ appointmentId }: CancelAppointmentParams) => {
+      const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to cancel appointment')
+      }
+
+      return response.json()
+    },
+    onMutate: async ({ appointmentId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['appointments'] })
+
+      // Snapshot the previous value
+      const previousAppointments = queryClient.getQueryData(['appointments'])
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['appointments'], (old: any) => {
+        if (!old?.data?.data?.appointments) return old
+        
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: {
+              ...old.data.data,
+              appointments: old.data.data.appointments.map((appointment: AppointmentWithRelations) =>
+                appointment.appointmentId === appointmentId
+                  ? { ...appointment, status: 'cancelled' }
+                  : appointment
+              )
+            }
+          }
+        }
+      })
+      return { previousAppointments }
+    },
+    onError: (error, { appointmentId }, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousAppointments) {
+        queryClient.setQueryData(['appointments'], context.previousAppointments)
+      }
+      toast.error(error.message || 'Failed to cancel appointment')
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Appointment cancelled successfully')
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure cache is in sync
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+    },
+  })
+}
+
+// Reset appointment status to pending mutation
+export function useResetAppointmentStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ appointmentId }: ResetStatusParams) => {
+      const response = await fetch(`/api/appointments/${appointmentId}/reset-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to reset appointment status')
+      }
+
+      return response.json()
+    },
+    onMutate: async ({ appointmentId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['appointments'] })
+
+      // Snapshot the previous value
+      const previousAppointments = queryClient.getQueryData(['appointments'])
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['appointments'], (old: any) => {
+        if (!old?.data?.data?.appointments) return old
+        
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: {
+              ...old.data.data,
+              appointments: old.data.data.appointments.map((appointment: AppointmentWithRelations) =>
+                appointment.appointmentId === appointmentId
+                  ? { ...appointment, status: 'pending' }
+                  : appointment
+              )
+            }
+          }
+        }
+      })
+      return { previousAppointments }
+    },
+    onError: (error, { appointmentId }, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousAppointments) {
+        queryClient.setQueryData(['appointments'], context.previousAppointments)
+      }
+      toast.error(error.message || 'Failed to reset appointment status')
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Appointment status reset to pending successfully')
     },
     onSettled: () => {
       // Always refetch after error or success to ensure cache is in sync

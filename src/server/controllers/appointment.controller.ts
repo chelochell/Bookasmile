@@ -620,6 +620,186 @@ appointmentController.delete('/:id', async (c) => {
 })
 
 /**
+ * Cancel an appointment (set status to cancelled)
+ * PATCH /appointments/:id/cancel
+ */
+appointmentController.patch('/:id/cancel', async (c) => {
+  try {
+    const appointmentId = c.req.param('id')
+    
+    if (!appointmentId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing appointment ID', 
+          message: 'Appointment ID is required' 
+        }, 
+        400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to cancel appointments' 
+        }, 
+        403
+      )
+    }
+
+    const result = await AppointmentService.cancelAppointment(appointmentId)
+    
+    if (!result.success) {
+      return c.json(
+        { 
+          success: false, 
+          error: result.error, 
+          message: result.message 
+        }, 
+        result.error === 'Appointment not found' ? 404 : 400
+      )
+    }
+
+    return c.json(
+      { 
+        success: true, 
+        data: result.data, 
+        message: result.message 
+      }, 
+      200
+    )
+  } catch (error: any) {
+    return c.json(
+      { 
+        success: false, 
+        error: 'Failed to cancel appointment', 
+        message: 'An error occurred while cancelling the appointment' 
+      }, 
+      500
+    )
+  }
+})
+
+/**
+ * Reset appointment status to pending
+ * PATCH /appointments/:id/reset-status
+ */
+appointmentController.patch('/:id/reset-status', async (c) => {
+  try {
+    const appointmentId = c.req.param('id')
+    
+    if (!appointmentId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing appointment ID', 
+          message: 'Appointment ID is required' 
+        }, 
+        400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to reset appointment status' 
+        }, 
+        403
+      )
+    }
+
+    const result = await AppointmentService.resetAppointmentStatus(appointmentId)
+    
+    if (!result.success) {
+      return c.json(
+        { 
+          success: false, 
+          error: result.error, 
+          message: result.message 
+        }, 
+        result.error === 'Appointment not found' ? 404 : 400
+      )
+    }
+
+    return c.json(
+      { 
+        success: true, 
+        data: result.data, 
+        message: result.message 
+      }, 
+      200
+    )
+  } catch (error: any) {
+    return c.json(
+      { 
+        success: false, 
+        error: 'Failed to reset appointment status', 
+        message: 'An error occurred while resetting the appointment status' 
+      }, 
+      500
+    )
+  }
+})
+
+/**
  * Health check for appointment controller
  * GET /appointments/health
  */

@@ -3,12 +3,14 @@ export * from './queries/use-appointments'
 export * from './queries/use-clinic-branches'
 export * from './queries/useAvailability'
 export * from './queries/use-notifications'
+export * from './queries/use-basic-user-information'
 
 // Mutation hooks  
 export * from './mutations/use-appointment-mutations'
 export * from './mutations/use-clinic-branch-mutations'
 export * from './mutations/useAvailabilityMutations'
 export * from './mutations/use-notification-mutations'
+export * from './mutations/use-basic-user-information-mutations'
 
 // Re-export for convenience - Appointments
 export { 
@@ -61,4 +63,19 @@ export {
   useMarkNotificationsAsRead,
   useMarkAllNotificationsAsRead,
   useDeleteNotification
-} from './mutations/use-notification-mutations' 
+} from './mutations/use-notification-mutations'
+
+// Re-export for convenience - Basic User Information
+export {
+  useBasicUserInformation,
+  useBasicUserInformationById,
+  useBasicUserInformationByUserId,
+  useUserHasBasicInformation,
+  basicUserInformationKeys
+} from './queries/use-basic-user-information'
+
+export {
+  useCreateBasicUserInformation,
+  useUpdateBasicUserInformation,
+  useDeleteBasicUserInformation
+} from './mutations/use-basic-user-information-mutations' 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, User, Plus, Search, CalendarDays, Stethoscope, MapPin, Building2, Settings, Eye, CheckCircle, RotateCcw, Trash2, UserPlus } from 'lucide-react'
+import { Calendar, Clock, User, Plus, Search, CalendarDays, Stethoscope, MapPin, Building2, Settings, Eye, CheckCircle, RotateCcw, Trash2, UserPlus, X, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,7 @@ import { RescheduleAppointmentDialog } from '@/components/atoms/reschedule-appoi
 import { AssignDentistDialog } from '@/components/atoms/assign-dentist-dialog'
 import { AppointmentWithRelations } from '@/server/models/appointment.model'
 import { formatPhilippineDateTime, formatPhilippineDate, formatPhilippineTime, isToday } from '@/utils/timezone'
-import { useConfirmAppointment, useDeleteAppointment, useRescheduleAppointment, useAssignDentist } from '@/hooks/mutations/use-appointment-management-mutations'
+import { useConfirmAppointment, useDeleteAppointment, useRescheduleAppointment, useAssignDentist, useCancelAppointment, useResetAppointmentStatus } from '@/hooks/mutations/use-appointment-management-mutations'
 import { useAppointments } from '@/hooks/queries/use-appointments'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -46,6 +46,8 @@ const SecretaryDashboard = () => {
   const deleteAppointmentMutation = useDeleteAppointment()
   const rescheduleAppointmentMutation = useRescheduleAppointment()
   const assignDentistMutation = useAssignDentist()
+  const cancelAppointmentMutation = useCancelAppointment()
+  const resetStatusMutation = useResetAppointmentStatus()
   
   // Dialog states
   const deleteDialog = useConfirmationDialog()
@@ -187,6 +189,14 @@ const SecretaryDashboard = () => {
         }
       }
     )
+  }
+
+  const handleCancelAppointment = (appointmentId: string) => {
+    cancelAppointmentMutation.mutate({ appointmentId })
+  }
+
+  const handleResetStatus = (appointmentId: string) => {
+    resetStatusMutation.mutate({ appointmentId })
   }
 
   // Loading state
@@ -482,6 +492,22 @@ const SecretaryDashboard = () => {
                             >
                               <RotateCcw className="w-4 h-4 mr-2" />
                               Reschedule Appointment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-blue-600"
+                              onClick={() => handleResetStatus(appointment.appointmentId || '')}
+                              disabled={appointment.status === 'pending' || resetStatusMutation.isPending}
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              {resetStatusMutation.isPending ? 'Resetting...' : 'Reset Status'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer text-orange-600"
+                              onClick={() => handleCancelAppointment(appointment.appointmentId || '')}
+                              disabled={appointment.status === 'cancelled' || cancelAppointmentMutation.isPending}
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              {cancelAppointmentMutation.isPending ? 'Cancelling...' : 'Cancel Appointment'}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer text-destructive"

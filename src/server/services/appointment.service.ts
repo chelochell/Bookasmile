@@ -713,4 +713,134 @@ export class AppointmentService {
       }
     }
   }
+
+  /**
+   * Cancel an appointment (set status to cancelled)
+   */
+  static async cancelAppointment(appointmentId: string) {
+    try {
+      // Check if appointment exists
+      const existingAppointment = await prisma.appointment.findUnique({
+        where: { appointmentId },
+        include: {
+          patient: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
+        }
+      })
+
+      if (!existingAppointment) {
+        return {
+          success: false,
+          error: 'Appointment not found',
+          message: 'No appointment found with this ID'
+        }
+      }
+
+      // Update appointment status to cancelled
+      const updatedAppointment = await prisma.appointment.update({
+        where: { appointmentId },
+        data: { status: 'cancelled' },
+        include: {
+          patient: {
+            select: {
+              name: true,
+              email: true
+            }
+          },
+          dentist: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          },
+          clinicBranch: true
+        }
+      })
+
+      return {
+        success: true,
+        data: updatedAppointment,
+        message: 'Appointment cancelled successfully'
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to cancel appointment',
+        message: 'Appointment cancellation failed'
+      }
+    }
+  }
+
+  /**
+   * Reset appointment status to pending
+   */
+  static async resetAppointmentStatus(appointmentId: string) {
+    try {
+      // Check if appointment exists
+      const existingAppointment = await prisma.appointment.findUnique({
+        where: { appointmentId },
+        include: {
+          patient: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
+        }
+      })
+
+      if (!existingAppointment) {
+        return {
+          success: false,
+          error: 'Appointment not found',
+          message: 'No appointment found with this ID'
+        }
+      }
+
+      // Update appointment status to pending
+      const updatedAppointment = await prisma.appointment.update({
+        where: { appointmentId },
+        data: { status: 'pending' },
+        include: {
+          patient: {
+            select: {
+              name: true,
+              email: true
+            }
+          },
+          dentist: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          },
+          clinicBranch: true
+        }
+      })
+
+      return {
+        success: true,
+        data: updatedAppointment,
+        message: 'Appointment status reset to pending successfully'
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to reset appointment status',
+        message: 'Appointment status reset failed'
+      }
+    }
+  }
 } 

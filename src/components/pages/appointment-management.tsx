@@ -7,14 +7,39 @@ import { Button } from '../ui/button'
 import { ChevronDown, Filter } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { Plus, BellDot, Calendar } from 'lucide-react'
-import { DataTable, columns } from '../organisms/appointment-table'
+import { DataTable } from '../organisms/appointment-table'
+import { createColumnsWithActions } from '../organisms/appointment-table/columns'
 import { useAppointments } from '@/hooks/queries/use-appointments'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import DentalFormDialog from '@/components/atoms/dental-form-dialog'
+import { ConfirmationDialog, useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
+import { RescheduleAppointmentDialog } from '@/components/atoms/reschedule-appointment-dialog'
+import { AssignDentistDialog } from '@/components/atoms/assign-dentist-dialog'
+import { AppointmentWithRelations } from '@/server/models/appointment.model'
+import { formatPhilippineDateTime, formatPhilippineDate, formatPhilippineTime } from '@/utils/timezone'
+import { useConfirmAppointment, useDeleteAppointment, useRescheduleAppointment, useAssignDentist, useCancelAppointment, useResetAppointmentStatus } from '@/hooks/mutations/use-appointment-management-mutations'
 
 const AppointmentManagementPage = () => {
     const [search, setSearch] = useQueryState('search', { defaultValue: '' })
     const [day, setDay] = useQueryState('day', { defaultValue: 'today' })
     const [status, setStatus] = useQueryState('status', { defaultValue: 'all' })
+
+    // React Query mutations
+    const confirmAppointmentMutation = useConfirmAppointment()
+    const deleteAppointmentMutation = useDeleteAppointment()
+    const rescheduleAppointmentMutation = useRescheduleAppointment()
+    const assignDentistMutation = useAssignDentist()
+    const cancelAppointmentMutation = useCancelAppointment()
+    const resetStatusMutation = useResetAppointmentStatus()
+    
+    // Dialog states
+    const deleteDialog = useConfirmationDialog()
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>('')
+    const [selectedAppointment, setSelectedAppointment] = useState<AppointmentWithRelations | null>(null)
+    const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false)
+    const [appointmentToReschedule, setAppointmentToReschedule] = useState<AppointmentWithRelations | null>(null)
+    const [assignDentistDialogOpen, setAssignDentistDialogOpen] = useState(false)
+    const [appointmentToAssignDentist, setAppointmentToAssignDentist] = useState<AppointmentWithRelations | null>(null)
 
     const dayOptions = [
         { value: 'today', label: 'Today' },
@@ -28,7 +53,8 @@ const AppointmentManagementPage = () => {
         { value: 'pending', label: 'Pending' },
         { value: 'confirmed', label: 'Confirmed' },
         { value: 'completed', label: 'Completed' },
-        { value: 'cancelled', label: 'Cancelled' }
+        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'rescheduled', label: 'Rescheduled' }
     ]
 
     const selectedDay = dayOptions.find(option => option.value === day)
@@ -53,16 +79,118 @@ const AppointmentManagementPage = () => {
 
     // Client-side filtering for search if API doesn't support it
     const filteredAppointments = useMemo(() => {
-        if (!search || !appointments) return appointments
+        if (!search || !appointments || !Array.isArray(appointments)) return appointments || []
 
-        return appointments.filter((appointment: any) => 
-            appointment.patient?.name?.toLowerCase().includes(search.toLowerCase()) ||
-            appointment.patient?.email?.toLowerCase().includes(search.toLowerCase()) ||
-            appointment.treatmentOptions?.some((treatment: string) => 
-                treatment.toLowerCase().includes(search.toLowerCase())
-            )
-        )
+        return appointments.filter((appointment: any) => {
+            // Ensure appointment object exists and has expected structure
+            if (!appointment) return false
+            
+            const patientName = appointment.patient?.name?.toLowerCase() || ''
+            const patientEmail = appointment.patient?.email?.toLowerCase() || ''
+            const searchTerm = search.toLowerCase()
+            
+            const matchesPatient = patientName.includes(searchTerm) || patientEmail.includes(searchTerm)
+            
+            const matchesTreatment = Array.isArray(appointment.treatmentOptions) && 
+                appointment.treatmentOptions.some((treatment: string) => 
+                    typeof treatment === 'string' && treatment.toLowerCase().includes(searchTerm)
+                )
+            
+            return matchesPatient || matchesTreatment
+        })
     }, [appointments, search])
+
+    // Handler functions
+    const handleConfirmAppointment = (appointmentId: string) => {
+        confirmAppointmentMutation.mutate({ appointmentId })
+    }
+
+    const handleDeleteAppointment = (appointmentId: string) => {
+        const appointment = appointments.find((apt: AppointmentWithRelations) => apt.appointmentId === appointmentId)
+        if (appointment) {
+            setSelectedAppointmentId(appointmentId)
+            setSelectedAppointment(appointment)
+            deleteDialog.openDialog()
+        }
+    }
+
+    const confirmDeleteAppointment = async () => {
+        if (selectedAppointmentId) {
+            deleteAppointmentMutation.mutate({ appointmentId: selectedAppointmentId })
+            setSelectedAppointmentId('')
+            setSelectedAppointment(null)
+        }
+    }
+
+    const handleAssignDentist = (appointmentId: string) => {
+        const appointment = appointments.find((apt: AppointmentWithRelations) => apt.appointmentId === appointmentId)
+        if (appointment) {
+            setAppointmentToAssignDentist(appointment)
+            setAssignDentistDialogOpen(true)
+        }
+    }
+
+    const handleRescheduleAppointment = (appointmentId: string) => {
+        const appointment = appointments.find((apt: AppointmentWithRelations) => apt.appointmentId === appointmentId)
+        if (appointment) {
+            setAppointmentToReschedule(appointment)
+            setRescheduleDialogOpen(true)
+        }
+    }
+
+    const handleRescheduleSubmit = (appointmentId: string, newDate: string, newStartTime: string, newEndTime?: string) => {
+        rescheduleAppointmentMutation.mutate(
+            { appointmentId, newDate, newStartTime, newEndTime },
+            {
+                onSuccess: () => {
+                    setRescheduleDialogOpen(false)
+                    setAppointmentToReschedule(null)
+                },
+                onError: () => {
+                    // Error is already handled by the mutation's toast
+                }
+            }
+        )
+    }
+
+    const handleAssignDentistSubmit = (appointmentId: string, dentistId: string) => {
+        assignDentistMutation.mutate(
+            { appointmentId, dentistId },
+            {
+                onSuccess: () => {
+                    setAssignDentistDialogOpen(false)
+                    setAppointmentToAssignDentist(null)
+                },
+                onError: () => {
+                    // Error is already handled by the mutation's toast
+                }
+            }
+        )
+    }
+
+    const handleCancelAppointment = (appointmentId: string) => {
+        cancelAppointmentMutation.mutate({ appointmentId })
+    }
+
+    const handleResetStatus = (appointmentId: string) => {
+        resetStatusMutation.mutate({ appointmentId })
+    }
+
+        // Create columns with action handlers
+    const columnsWithActions = useMemo(() => {
+        return createColumnsWithActions({
+            onConfirmAppointment: handleConfirmAppointment,
+            onDeleteAppointment: handleDeleteAppointment,
+            onAssignDentist: handleAssignDentist,
+            onRescheduleAppointment: handleRescheduleAppointment,
+            onCancelAppointment: handleCancelAppointment,
+            onResetStatus: handleResetStatus,
+            confirmLoading: confirmAppointmentMutation.isPending,
+            deleteLoading: deleteAppointmentMutation.isPending,
+            cancelLoading: cancelAppointmentMutation.isPending,
+            resetLoading: resetStatusMutation.isPending
+        })
+    }, [confirmAppointmentMutation.isPending, deleteAppointmentMutation.isPending, cancelAppointmentMutation.isPending, resetStatusMutation.isPending])
 
     return (
         <div className='flex flex-col gap-6'>
@@ -154,9 +282,51 @@ const AppointmentManagementPage = () => {
                         </div>
                     </div>
                 ) : (
-                    <DataTable columns={columns} data={filteredAppointments} />
+                    <DataTable columns={columnsWithActions} data={filteredAppointments} />
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmationDialog
+                isOpen={deleteDialog.isOpen}
+                onClose={() => {
+                    deleteDialog.closeDialog()
+                    setSelectedAppointmentId('')
+                    setSelectedAppointment(null)
+                }}
+                onConfirm={confirmDeleteAppointment}
+                title="Delete Appointment"
+                description={
+                    selectedAppointment
+                        ? `Are you sure you want to delete the appointment for ${selectedAppointment.patient?.name || 'this patient'} on ${formatPhilippineDate(selectedAppointment.appointmentDate, 'MMM DD, YYYY')} at ${formatPhilippineTime(selectedAppointment.startTime, 'h:mm A')}? This action cannot be undone.`
+                        : 'Are you sure you want to delete this appointment? This action cannot be undone.'
+                }
+                confirmText="Delete Appointment"
+                cancelText="Cancel"
+                variant="destructive"
+            />
+
+            {/* Reschedule Appointment Dialog */}
+            {appointmentToReschedule && (
+                <RescheduleAppointmentDialog
+                    appointment={appointmentToReschedule}
+                    open={rescheduleDialogOpen}
+                    onOpenChange={setRescheduleDialogOpen}
+                    onReschedule={handleRescheduleSubmit}
+                    isLoading={rescheduleAppointmentMutation.isPending}
+                />
+            )}
+
+            {/* Assign Dentist Dialog */}
+            {appointmentToAssignDentist && (
+                <AssignDentistDialog
+                    appointment={appointmentToAssignDentist}
+                    open={assignDentistDialogOpen}
+                    onOpenChange={setAssignDentistDialogOpen}
+                    onAssignDentist={handleAssignDentistSubmit}
+                    isLoading={assignDentistMutation.isPending}
+                />
+            )}
         </div>
     )
 }

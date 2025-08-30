@@ -321,6 +321,215 @@ appointmentController.patch('/:id/confirm', async (c) => {
 })
 
 /**
+ * Reschedule an appointment
+ * PATCH /appointments/:id/reschedule
+ */
+appointmentController.patch('/:id/reschedule', async (c) => {
+  try {
+    const appointmentId = c.req.param('id')
+    const body = await c.req.json()
+    
+    if (!appointmentId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing appointment ID', 
+          message: 'Appointment ID is required' 
+        }, 
+        400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to reschedule appointments' 
+        }, 
+        403
+      )
+    }
+
+    if (!body.newDate || !body.newStartTime) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing required fields', 
+          message: 'New date and start time are required' 
+        }, 
+        400
+      )
+    }
+
+    const result = await AppointmentService.rescheduleAppointment(
+      appointmentId,
+      body.newDate,
+      body.newStartTime,
+      body.newEndTime
+    )
+    
+    if (!result.success) {
+      return c.json(
+        { 
+          success: false, 
+          error: result.error, 
+          message: result.message 
+        }, 
+        result.error === 'Appointment not found' ? 404 : 400
+      )
+    }
+
+    return c.json(
+      { 
+        success: true, 
+        data: result.data, 
+        message: result.message 
+      }, 
+      200
+    )
+  } catch (error: any) {
+    return c.json(
+      { 
+        success: false, 
+        error: 'Failed to reschedule appointment', 
+        message: 'An error occurred while rescheduling the appointment' 
+      }, 
+      500
+    )
+  }
+})
+
+/**
+ * Assign a dentist to an appointment
+ * PATCH /appointments/:id/assign-dentist
+ */
+appointmentController.patch('/:id/assign-dentist', async (c) => {
+  try {
+    const appointmentId = c.req.param('id')
+    const body = await c.req.json()
+    
+    if (!appointmentId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing appointment ID', 
+          message: 'Appointment ID is required' 
+        }, 
+        400
+      )
+    }
+
+    // Check user role for authorization
+    const session = await getServerSession()
+    if (!session?.user) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'Authentication required' 
+        }, 
+        401
+      )
+    }
+
+    const userRole = session.user.role
+    if (!userRole) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Unauthorized', 
+          message: 'User role not found' 
+        }, 
+        401
+      )
+    }
+
+    const allowedRoles = ['dentist', 'secretary', 'super_admin']
+    
+    if (!allowedRoles.includes(userRole)) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Forbidden', 
+          message: 'Insufficient permissions to assign dentists' 
+        }, 
+        403
+      )
+    }
+
+    if (!body.dentistId) {
+      return c.json(
+        { 
+          success: false, 
+          error: 'Missing dentist ID', 
+          message: 'Dentist ID is required' 
+        }, 
+        400
+      )
+    }
+
+    const result = await AppointmentService.assignDentist(appointmentId, body.dentistId)
+    
+    if (!result.success) {
+      return c.json(
+        { 
+          success: false, 
+          error: result.error, 
+          message: result.message 
+        }, 
+        result.error === 'Appointment not found' || result.error === 'Dentist not found' ? 404 : 400
+      )
+    }
+
+    return c.json(
+      { 
+        success: true, 
+        data: result.data, 
+        message: result.message 
+      }, 
+      200
+    )
+  } catch (error: any) {
+    return c.json(
+      { 
+        success: false, 
+        error: 'Failed to assign dentist', 
+        message: 'An error occurred while assigning the dentist' 
+      }, 
+      500
+    )
+  }
+})
+
+/**
  * Delete an appointment
  * DELETE /appointments/:id
  */

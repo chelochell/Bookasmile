@@ -14,7 +14,6 @@ import ReviewStep from './stepper-steps/review-step'
 export interface AppointmentFormData {
   clinicBranchId: number | null
   selectedTreatments: string[]
-  dentistId: string | null
   selectedDateTime: string
   dentalSymptoms: string // JSON string of dental issues/symptoms
   notes: string
@@ -34,7 +33,6 @@ export default function AppointmentStepper() {
   const [formData, setFormData] = useState<AppointmentFormData>({
     clinicBranchId: null,
     selectedTreatments: [],
-    dentistId: null,
     selectedDateTime: '',
     dentalSymptoms: '',
     notes: ''
@@ -66,7 +64,7 @@ export default function AppointmentStepper() {
       case 2:
         return formData.selectedTreatments.length > 0
       case 3:
-        return formData.selectedDateTime && formData.dentistId
+        return formData.selectedDateTime
       case 4:
         return formData.dentalSymptoms !== ''
       case 5:
@@ -99,9 +97,7 @@ export default function AppointmentStepper() {
           <DateTimeStep
             clinicBranchId={formData.clinicBranchId}
             selectedDateTime={formData.selectedDateTime}
-            selectedDentistId={formData.dentistId}
             onDateTimeChange={(dateTime: string) => updateFormData('selectedDateTime', dateTime)}
-            onDentistChange={(dentistId: string) => updateFormData('dentistId', dentistId)}
           />
         )
       case 4:

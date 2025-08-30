@@ -16,13 +16,12 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useClinicBranches } from '@/hooks/queries/use-clinic-branches'
-import { useDentists } from '@/hooks/queries/use-dentists'
 import { useCreateAppointment } from '@/hooks/mutations/use-appointment-mutations'
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import { AppointmentFormData } from '../appointment-stepper'
 import { cn } from '@/lib/utils'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 
 interface ReviewStepProps {
   formData: AppointmentFormData
@@ -45,13 +44,9 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
   const router = useRouter()
   
   const { data: branches = [] } = useClinicBranches()
-  const { data: dentists = [] } = useDentists(
-    formData.clinicBranchId ? { clinicBranchId: formData.clinicBranchId } : undefined
-  )
   const createAppointment = useCreateAppointment()
 
   const selectedBranch = branches.find(b => b.id === formData.clinicBranchId)
-  const selectedDentist = dentists.find(d => d.id === formData.dentistId)
   const selectedTreatmentNames = formData.selectedTreatments
     .map(id => treatmentTypes.find(t => t.id === id)?.name)
     .filter(Boolean)
@@ -84,7 +79,6 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
     try {
       const appointmentData = {
         patientId: session.user.id,
-        dentistId: formData.dentistId || undefined,
         scheduledBy: session.user.id,
         appointmentDate: formData.selectedDateTime,
         startTime: formData.selectedDateTime,
@@ -108,13 +102,10 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
       
       // Show minimal error messages in toast
       if (error instanceof Error) {
-        if (error.message.includes('dentist has another appointment') || 
-            error.message.includes('Schedule conflict detected')) {
-          toast.error('Time slot unavailable. Please choose a different time.')
-        } else if (error.message.includes('Invalid') || error.message.includes('validation')) {
+        if (error.message.includes('Invalid') || error.message.includes('validation')) {
           toast.error('Please check your appointment details.')
         } else if (error.message.includes('not found')) {
-          toast.error('Selected dentist or clinic not available.')
+          toast.error('Selected clinic not available.')
         } else {
           toast.error('Unable to book appointment. Please try again.')
         }
@@ -131,7 +122,6 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
       formData.clinicBranchId &&
       formData.selectedTreatments.length > 0 &&
       formData.selectedDateTime &&
-      formData.dentistId &&
       formData.dentalSymptoms
     )
   }
@@ -187,28 +177,19 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
             )}
           </div>
 
-          {/* Dentist */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center font-poppins">
-                <User className="w-4 h-4 mr-2 text-green-500" />
-                Dentist
+          {/* Dentist Assignment Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <h3 className="text-sm font-semibold text-blue-900 flex items-center font-poppins">
+                <User className="w-4 h-4 mr-2 text-blue-600" />
+                Dentist Assignment
               </h3>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800 h-6 px-2">
-                <Edit className="w-3 h-3 mr-1" />
-                <span className="text-xs">Edit</span>
-              </Button>
             </div>
             
-            {selectedDentist ? (
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">Dr. {selectedDentist.user.name}</p>
-                <p className="text-xs text-gray-600">{selectedDentist.specialization.join(', ')}</p>
-                <p className="text-xs text-gray-600">{selectedDentist.user.email}</p>
-              </div>
-            ) : (
-              <p className="text-red-600 text-sm">No dentist selected</p>
-            )}
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-blue-800">Will be assigned by our staff</p>
+              <p className="text-xs text-blue-600">A qualified dentist will be assigned to your appointment based on your treatment needs and availability.</p>
+            </div>
           </div>
         </div>
 

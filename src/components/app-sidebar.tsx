@@ -16,6 +16,7 @@ import {
   DollarSign,
   TrendingUp,
   Activity,
+  Bell,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { MdDashboard } from "react-icons/md";
@@ -36,6 +37,8 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useUnreadNotificationCount } from "@/hooks/queries/use-notifications";
 
 interface MenuSubItem {
   title: string;
@@ -146,6 +149,48 @@ const adminItems: MenuItem[] = [
 interface AppSidebarProps {
   role: string;
   user: any;
+}
+
+// Notification Button Component
+function NotificationButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data: unreadCount, isLoading } = useUnreadNotificationCount();
+  
+  const count = unreadCount?.data?.count || 0;
+  const isActive = pathname === '/notifications';
+
+  const handleClick = () => {
+    router.push('/notifications');
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      onClick={handleClick}
+      className={cn(
+        "w-full justify-start h-12 px-3 rounded-lg transition-all duration-200 relative",
+        isActive 
+          ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+      )}
+    >
+      <div className="flex items-center gap-3 w-full">
+        <div className="relative">
+          <Bell className="h-8 w-8" />
+          {!isLoading && count > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+            >
+              {count > 99 ? '99+' : count}
+            </Badge>
+          )}
+        </div>
+        <span className="font-medium">Notifications</span>
+      </div>
+    </Button>
+  );
 }
 
 export function AppSidebar({ role, user }: AppSidebarProps) {
@@ -320,7 +365,11 @@ export function AppSidebar({ role, user }: AppSidebarProps) {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="p-4 bg-gray-100">
+      <SidebarFooter className="p-4 bg-gray-100 space-y-2">
+        {/* Notifications */}
+        <NotificationButton />
+        
+        {/* Sign Out */}
         <Button
           variant="ghost"
           onClick={signOut}

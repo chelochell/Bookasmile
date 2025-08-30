@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, User, Plus, Search, CalendarDays, Stethoscope, MapPin, Building2, Settings, Eye, CheckCircle, RotateCcw, Trash2 } from 'lucide-react'
+import { Calendar, Clock, User, Plus, Search, CalendarDays, Stethoscope, MapPin, Building2, Settings, Eye, CheckCircle, RotateCcw, Trash2, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -12,9 +12,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import DentalFormDialog from '@/components/atoms/dental-form-dialog'
 import { ConfirmationDialog, useConfirmationDialog } from '@/components/atoms/confirmation-dialog'
+import { RescheduleAppointmentDialog } from '@/components/atoms/reschedule-appointment-dialog'
+import { AssignDentistDialog } from '@/components/atoms/assign-dentist-dialog'
 import { AppointmentWithRelations } from '@/server/models/appointment.model'
 import { formatPhilippineDateTime, formatPhilippineDate, formatPhilippineTime, isToday } from '@/utils/timezone'
-import { useConfirmAppointment, useDeleteAppointment } from '@/hooks/mutations/use-appointment-management-mutations'
+import { useConfirmAppointment, useDeleteAppointment, useRescheduleAppointment, useAssignDentist } from '@/hooks/mutations/use-appointment-management-mutations'
 import { useAppointments } from '@/hooks/queries/use-appointments'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -42,11 +44,17 @@ const SecretaryDashboard = () => {
   // React Query mutations
   const confirmAppointmentMutation = useConfirmAppointment()
   const deleteAppointmentMutation = useDeleteAppointment()
+  const rescheduleAppointmentMutation = useRescheduleAppointment()
+  const assignDentistMutation = useAssignDentist()
   
-  // Confirmation dialog state
+  // Dialog states
   const deleteDialog = useConfirmationDialog()
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>('')
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentWithRelations | null>(null)
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false)
+  const [appointmentToReschedule, setAppointmentToReschedule] = useState<AppointmentWithRelations | null>(null)
+  const [assignDentistDialogOpen, setAssignDentistDialogOpen] = useState(false)
+  const [appointmentToAssignDentist, setAppointmentToAssignDentist] = useState<AppointmentWithRelations | null>(null)
 
   // Filter appointments
   const filteredAppointments = useMemo(() => {
@@ -135,14 +143,50 @@ const SecretaryDashboard = () => {
     }
   }
 
-  const handleViewAppointment = (appointmentId: string) => {
-    // Placeholder for view functionality
-    toast.info('View appointment functionality coming soon')
+  const handleAssignDentist = (appointmentId: string) => {
+    const appointment = appointments.find((apt: AppointmentWithRelations) => apt.appointmentId === appointmentId)
+    if (appointment) {
+      setAppointmentToAssignDentist(appointment)
+      setAssignDentistDialogOpen(true)
+    }
   }
 
   const handleRescheduleAppointment = (appointmentId: string) => {
-    // Placeholder for reschedule functionality
-    toast.info('Reschedule appointment functionality coming soon')
+    const appointment = appointments.find((apt: AppointmentWithRelations) => apt.appointmentId === appointmentId)
+    if (appointment) {
+      setAppointmentToReschedule(appointment)
+      setRescheduleDialogOpen(true)
+    }
+  }
+
+  const handleRescheduleSubmit = (appointmentId: string, newDate: string, newStartTime: string, newEndTime?: string) => {
+    rescheduleAppointmentMutation.mutate(
+      { appointmentId, newDate, newStartTime, newEndTime },
+      {
+        onSuccess: () => {
+          setRescheduleDialogOpen(false)
+          setAppointmentToReschedule(null)
+        },
+        onError: () => {
+          // Error is already handled by the mutation's toast
+        }
+      }
+    )
+  }
+
+  const handleAssignDentistSubmit = (appointmentId: string, dentistId: string) => {
+    assignDentistMutation.mutate(
+      { appointmentId, dentistId },
+      {
+        onSuccess: () => {
+          setAssignDentistDialogOpen(false)
+          setAppointmentToAssignDentist(null)
+        },
+        onError: () => {
+          // Error is already handled by the mutation's toast
+        }
+      }
+    )
   }
 
   // Loading state
@@ -419,10 +463,10 @@ const SecretaryDashboard = () => {
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem 
                               className="cursor-pointer"
-                              onClick={() => handleViewAppointment(appointment.appointmentId || '')}
+                              onClick={() => handleAssignDentist(appointment.appointmentId || '')}
                             >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Appointment
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Assign Dentist
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer"
@@ -487,6 +531,28 @@ const SecretaryDashboard = () => {
         cancelText="Cancel"
         variant="destructive"
       />
+
+      {/* Reschedule Appointment Dialog */}
+      {appointmentToReschedule && (
+        <RescheduleAppointmentDialog
+          appointment={appointmentToReschedule}
+          open={rescheduleDialogOpen}
+          onOpenChange={setRescheduleDialogOpen}
+          onReschedule={handleRescheduleSubmit}
+          isLoading={rescheduleAppointmentMutation.isPending}
+        />
+      )}
+
+      {/* Assign Dentist Dialog */}
+      {appointmentToAssignDentist && (
+        <AssignDentistDialog
+          appointment={appointmentToAssignDentist}
+          open={assignDentistDialogOpen}
+          onOpenChange={setAssignDentistDialogOpen}
+          onAssignDentist={handleAssignDentistSubmit}
+          isLoading={assignDentistMutation.isPending}
+        />
+      )}
     </div>
   )
 }

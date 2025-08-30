@@ -34,6 +34,9 @@ model User {
   patientAppointments   Appointment[] @relation("PatientAppointments")
   scheduledAppointments Appointment[] @relation("ScheduledAppointments")
 
+  // Notifications
+  notifications Notification[]
+
   dentist Dentist?
 
   @@unique([email])
@@ -108,6 +111,9 @@ model Appointment {
   dentist         Dentist?      @relation("DentistAppointments", fields: [dentistId], references: [id], onDelete: Cascade)
   scheduledByUser User          @relation("ScheduledAppointments", fields: [scheduledBy], references: [id], onDelete: Cascade)
   clinicBranch    ClinicBranch  @relation(fields: [clinicBranchId], references: [id], onDelete: Cascade)
+  
+  // Notifications
+  notifications   Notification[]
 
   @@map("appointment")
 }
@@ -177,3 +183,25 @@ model DentistLeaves {
 
   @@map("dentist_leaves")
 }
+
+model Notification {
+  id          String   @id @default(cuid()) @map("id")
+  userId      String   @map("user_id")
+  title       String   @map("title")
+  message     String   @map("message")
+  type        String   @default("info") @map("type") // info, success, warning, error
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Optional reference to related entities
+  appointmentId String? @map("appointment_id")
+  
+  // Relations
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [appointmentId], onDelete: SetNull)
+
+  @@map("notification")
+}
+
+

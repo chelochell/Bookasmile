@@ -7,6 +7,7 @@ import {
   UpdateAppointmentInput,
   AppointmentQueryParams
 } from '@/server/models/appointment.model'
+import { NotificationService } from './notification.service'
 
 export class AppointmentService {
   /**
@@ -429,6 +430,250 @@ export class AppointmentService {
         success: false,
         error: error.message || 'Failed to confirm appointment',
         message: 'Appointment confirmation failed'
+      }
+    }
+  }
+
+  /**
+   * Reschedule an appointment
+   */
+  static async rescheduleAppointment(appointmentId: string, newDate: string, newStartTime: string, newEndTime?: string) {
+    try {
+      // Check if appointment exists
+      const existingAppointment = await prisma.appointment.findUnique({
+        where: { appointmentId },
+        include: {
+          patient: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
+          clinicBranch: { select: { id: true, name: true, address: true } }
+        }
+      })
+
+      if (!existingAppointment) {
+        return {
+          success: false,
+          error: 'Appointment not found',
+          message: 'No appointment found with this ID'
+        }
+      }
+
+      // Store old appointment details for notification
+      const oldDate = existingAppointment.appointmentDate
+      const oldStartTime = existingAppointment.startTime
+
+      // Convert string dates to Date objects
+      const appointmentDate = new Date(newDate)
+      const startTime = new Date(newStartTime)
+      const endTime = newEndTime ? new Date(newEndTime) : null
+
+      // Check for scheduling conflicts if dentist is assigned
+      if (existingAppointment.dentistId) {
+        const conflictingAppointment = await prisma.appointment.findFirst({
+          where: {
+            dentistId: existingAppointment.dentistId,
+            appointmentDate: appointmentDate,
+            appointmentId: { not: appointmentId }, // Exclude current appointment
+            OR: [
+              {
+                AND: [
+                  { startTime: { lte: startTime } },
+                  { endTime: { gte: startTime } }
+                ]
+              },
+              {
+                AND: [
+                  { startTime: { lte: endTime || startTime } },
+                  { endTime: { gte: endTime || startTime } }
+                ]
+              }
+            ]
+          }
+        })
+
+        if (conflictingAppointment) {
+          return {
+            success: false,
+            error: 'Schedule conflict detected',
+            message: 'The dentist has another appointment at this time'
+          }
+        }
+      }
+
+      // Update appointment with new schedule
+      const appointment = await prisma.appointment.update({
+        where: { appointmentId },
+        data: {
+          appointmentDate,
+          startTime,
+          endTime,
+          status: 'rescheduled'
+        },
+        include: {
+          patient: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
+          scheduledByUser: { select: { id: true, name: true, email: true } },
+          clinicBranch: { select: { id: true, name: true, address: true } }
+        }
+      })
+
+      // Create notification for the patient
+      try {
+        await NotificationService.createNotification({
+          userId: existingAppointment.patientId,
+          title: 'Appointment Rescheduled',
+          message: `Your appointment has been rescheduled from ${oldDate.toLocaleDateString()} at ${oldStartTime.toLocaleTimeString()} to ${appointmentDate.toLocaleDateString()} at ${startTime.toLocaleTimeString()}.`,
+          type: 'info',
+          appointmentId: appointmentId
+        })
+      } catch (notificationError) {
+        // Don't fail the reschedule if notification fails
+        console.error('Failed to create notification:', notificationError)
+      }
+
+      return {
+        success: true,
+        data: appointment,
+        message: 'Appointment rescheduled successfully'
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to reschedule appointment',
+        message: 'Appointment reschedule failed'
+      }
+    }
+  }
+
+  /**
+   * Assign a dentist to an appointment
+   */
+  static async assignDentist(appointmentId: string, dentistId: string) {
+    try {
+      // Check if appointment exists
+      const existingAppointment = await prisma.appointment.findUnique({
+        where: { appointmentId },
+        include: {
+          patient: { select: { id: true, name: true, email: true } },
+          clinicBranch: { select: { id: true, name: true, address: true } }
+        }
+      })
+
+      if (!existingAppointment) {
+        return {
+          success: false,
+          error: 'Appointment not found',
+          message: 'No appointment found with this ID'
+        }
+      }
+
+      // Check if dentist exists
+      const dentist = await prisma.dentist.findUnique({
+        where: { id: dentistId },
+        include: {
+          user: { select: { id: true, name: true, email: true } }
+        }
+      })
+
+      if (!dentist) {
+        return {
+          success: false,
+          error: 'Dentist not found',
+          message: 'No dentist found with this ID'
+        }
+      }
+
+      // Check for scheduling conflicts with the new dentist
+      const conflictingAppointment = await prisma.appointment.findFirst({
+        where: {
+          dentistId: dentistId,
+          appointmentDate: existingAppointment.appointmentDate,
+          appointmentId: { not: appointmentId }, // Exclude current appointment
+          OR: [
+            {
+              AND: [
+                { startTime: { lte: existingAppointment.startTime } },
+                { 
+                  OR: [
+                    { endTime: { gte: existingAppointment.startTime } },
+                    { endTime: null }
+                  ]
+                }
+              ]
+            },
+            existingAppointment.endTime ? {
+              AND: [
+                { startTime: { lte: existingAppointment.endTime } },
+                { 
+                  OR: [
+                    { endTime: { gte: existingAppointment.endTime } },
+                    { endTime: null }
+                  ]
+                }
+              ]
+            } : {}
+          ]
+        }
+      })
+
+      if (conflictingAppointment) {
+        return {
+          success: false,
+          error: 'Schedule conflict detected',
+          message: 'The dentist has another appointment at this time'
+        }
+      }
+
+      // Update appointment with new dentist
+      const appointment = await prisma.appointment.update({
+        where: { appointmentId },
+        data: { dentistId },
+        include: {
+          patient: { select: { id: true, name: true, email: true } },
+          dentist: { 
+            select: { 
+              id: true, 
+              user: { select: { id: true, name: true, email: true } } 
+            } 
+          },
+          scheduledByUser: { select: { id: true, name: true, email: true } },
+          clinicBranch: { select: { id: true, name: true, address: true } }
+        }
+      })
+
+      // Create notification for the patient
+      try {
+        await NotificationService.createNotification({
+          userId: existingAppointment.patientId,
+          title: 'Dentist Assigned',
+          message: `Dr. ${dentist.user.name} has been assigned to your appointment on ${existingAppointment.appointmentDate.toLocaleDateString()}.`,
+          type: 'info',
+          appointmentId: appointmentId
+        })
+      } catch (notificationError) {
+        // Don't fail the assignment if notification fails
+        console.error('Failed to create notification:', notificationError)
+      }
+
+      return {
+        success: true,
+        data: appointment,
+        message: 'Dentist assigned successfully'
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to assign dentist',
+        message: 'Dentist assignment failed'
       }
     }
   }
